@@ -22,5 +22,21 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
-/ProyectoFinal/nbproject/private/
-/ProyectoFinal/build/
+
+# ==========================================
+# AGREGADOS PARA TU ENTORNO (MAC & NETBEANS)
+# ==========================================
+
+# macOS (Para ignorar los archivos ocultos del sistema)
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# NetBeans (Ajustado con ** para que cubra cualquier subcarpeta del proyecto)
+**/nbproject/private/
+**/build/
+**/dist/
+nbbuild/
+nbdist/
+.nb-gradle/

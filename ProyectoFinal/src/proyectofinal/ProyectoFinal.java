@@ -8,7 +8,7 @@ package proyectofinal;
  *
  * @author denis
  */
-import conexion.Conexion;
+import connection.ConnectionDB;
 public class ProyectoFinal {
 
     /**
@@ -16,7 +16,7 @@ public class ProyectoFinal {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        Conexion c = new Conexion();
+        ConnectionDB c = new ConnectionDB();
         c.getConexion();
     }
     

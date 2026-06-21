@@ -4,6 +4,8 @@
  */
 package model;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author denis
@@ -16,12 +18,12 @@ public class Comida {
     private String nombre;
     private int id_categoria; // FK categoria_comida
     private String descripcion;
-    private double precio;
+    private BigDecimal precio;
     private int activo;
 
     public Comida() {}
 
-    public Comida(int id_comida, String nombre, int id_categoria, String descripcion, double precio, int activo) {
+    public Comida(int id_comida, String nombre, int id_categoria, String descripcion, BigDecimal precio, int activo) {
         this.id_comida = id_comida;
         this.nombre = nombre;
         this.id_categoria = id_categoria;
@@ -63,11 +65,11 @@ public class Comida {
         this.descripcion = descripcion;
     }
 
-    public double getPrecio() {
+    public BigDecimal getPrecio() {
         return precio;
     }
 
-    public void setPrecio(double precio) {
+    public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
 

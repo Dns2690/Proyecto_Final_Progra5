@@ -21,7 +21,8 @@ public class Comida {
     private BigDecimal precio;
     private int activo;
 
-    public Comida() {}
+    public Comida() {
+    }
 
     public Comida(int id_comida, String nombre, int id_categoria, String descripcion, BigDecimal precio, int activo) {
         this.id_comida = id_comida;

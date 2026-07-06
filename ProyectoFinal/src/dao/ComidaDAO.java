@@ -15,14 +15,15 @@ public class ComidaDAO {
 
     // 1. CREATE (Insertar nueva comida)
     public boolean insert(Comida comida) {
-        String sql = "INSERT INTO comida (nombre, id_categoria, descripcion, activo) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO comida (nombre, id_categoria, descripcion, precio, activo) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
+
             ps.setString(1, comida.getNombre());
             ps.setInt(2, comida.getId_categoria());
             ps.setString(3, comida.getDescripcion());
-            ps.setInt(4, comida.getActivo());
+            ps.setBigDecimal(4, comida.getPrecio());
+            ps.setInt(5, comida.getActivo());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -33,15 +34,16 @@ public class ComidaDAO {
 
     // 2. UPDATE (Modificar comida existente)
     public boolean update(Comida comida) {
-        String sql = "UPDATE comida SET nombre = ?, id_categoria = ?, descripcion = ?, activo = ? WHERE id_comida = ?";
+        String sql = "UPDATE comida SET nombre = ?, id_categoria = ?, descripcion = ?, precio = ?, activo = ? WHERE id_comida = ?";
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
+
             ps.setString(1, comida.getNombre());
             ps.setInt(2, comida.getId_categoria());
             ps.setString(3, comida.getDescripcion());
-            ps.setInt(4, comida.getActivo());
-            ps.setInt(5, comida.getId_comida());
+            ps.setBigDecimal(4, comida.getPrecio());
+            ps.setInt(5, comida.getActivo());
+            ps.setInt(6, comida.getId_comida());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -78,6 +80,7 @@ public class ComidaDAO {
                 c.setNombre(rs.getString("nombre"));
                 c.setId_categoria(rs.getInt("id_categoria"));
                 c.setDescripcion(rs.getString("descripcion"));
+                c.setPrecio(rs.getBigDecimal("precio"));
                 c.setActivo(rs.getInt("activo"));
                 lista.add(c);
             }

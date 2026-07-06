@@ -11,21 +11,21 @@ public class AdministradorDAO {
     
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    public boolean registrar(Administrador admin) {
+    public boolean insert(Administrador admin) {
         String sql = "INSERT INTO administrador (usuario, contrasena, nombre) VALUES (?, ?, ?)";
-        
+
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
+
             ps.setString(1, admin.getUsuario());
-            ps.setString(2, admin.getContrasena()); 
+            ps.setString(2, admin.getContrasena());
             ps.setString(3, admin.getNombre());
-            
+
             int filasAfectadas = ps.executeUpdate();
             return filasAfectadas > 0;
-            
+
         } catch (SQLException e) {
-            System.out.println("Error al registrar administrador en DAO: " + e.getMessage());
+            System.out.println("Error al insertar administrador en DAO: " + e.getMessage());
             return false;
         }
     }

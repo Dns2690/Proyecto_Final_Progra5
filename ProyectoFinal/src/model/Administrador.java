@@ -33,10 +33,10 @@ public class Administrador {
     public String getContrasena(){return contrasena;}
     public String getNombre(){return nombre;}
 
-    public void setId_admin(){ this.id_admin = id_admin;}
-    public void setUsuario(){ this.usuario = usuario;}
-    public void setContrasena(){ this.contrasena = contrasena;}
-    public void setNombre(){this.nombre = nombre;}
+    public void setId_admin(int id_admin){ this.id_admin = id_admin;}
+    public void setUsuario(String usuario){ this.usuario = usuario;}
+    public void setContrasena(String contrasena){ this.contrasena = contrasena;}
+    public void setNombre(String nombre){this.nombre = nombre;}
 
 }
 

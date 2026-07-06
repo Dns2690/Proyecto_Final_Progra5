@@ -40,3 +40,10 @@ Icon
 nbbuild/
 nbdist/
 .nb-gradle/
+
+# ==========================================
+# Claude Code (notas y config local, no deben subirse)
+# ==========================================
+CLAUDE.md
+**/anahata.md
+.claude/

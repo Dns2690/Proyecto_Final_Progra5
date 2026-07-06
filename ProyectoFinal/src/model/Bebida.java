@@ -16,12 +16,12 @@ public class Bebida {
     private int id_categoria;
     private String descripcion;
     private BigDecimal precio;
-    private boolean activo;
+    private int activo;
 
     public Bebida() {
     }
 
-    public Bebida(int id_bebida, String nombre, int id_categoria, String descripcion, BigDecimal precio, boolean activo) {
+    public Bebida(int id_bebida, String nombre, int id_categoria, String descripcion, BigDecimal precio, int activo) {
         this.id_bebida = id_bebida;
         this.nombre = nombre;
         this.id_categoria = id_categoria;
@@ -70,11 +70,11 @@ public class Bebida {
         this.precio = precio;
     }
 
-    public boolean isActivo() {
+    public int getActivo() {
         return activo;
     }
 
-    public void setActivo(boolean activo) {
+    public void setActivo(int activo) {
         this.activo = activo;
     }
     

@@ -15,13 +15,15 @@ public class BebidaDAO {
 
     // 1. CREATE (Insertar nueva bebida)
     public boolean insert(Bebida bebida) {
-        String sql = "INSERT INTO bebida (nombre, id_categoria, descripcion) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO bebida (nombre, id_categoria, descripcion, precio, activo) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
+
             ps.setString(1, bebida.getNombre());
             ps.setInt(2, bebida.getId_categoria());
             ps.setString(3, bebida.getDescripcion());
+            ps.setBigDecimal(4, bebida.getPrecio());
+            ps.setInt(5, bebida.getActivo());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -32,14 +34,16 @@ public class BebidaDAO {
 
     // 2. UPDATE (Modificar bebida existente)
     public boolean update(Bebida bebida) {
-        String sql = "UPDATE bebida SET nombre = ?, id_categoria = ?, descripcion = ? WHERE id_bebida = ?";
+        String sql = "UPDATE bebida SET nombre = ?, id_categoria = ?, descripcion = ?, precio = ?, activo = ? WHERE id_bebida = ?";
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
+
             ps.setString(1, bebida.getNombre());
             ps.setInt(2, bebida.getId_categoria());
             ps.setString(3, bebida.getDescripcion());
-            ps.setInt(4, bebida.getId_bebida());
+            ps.setBigDecimal(4, bebida.getPrecio());
+            ps.setInt(5, bebida.getActivo());
+            ps.setInt(6, bebida.getId_bebida());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -76,6 +80,8 @@ public class BebidaDAO {
                 b.setNombre(rs.getString("nombre"));
                 b.setId_categoria(rs.getInt("id_categoria"));
                 b.setDescripcion(rs.getString("descripcion"));
+                b.setPrecio(rs.getBigDecimal("precio"));
+                b.setActivo(rs.getInt("activo"));
                 lista.add(b);
             }
         } catch (SQLException e) {

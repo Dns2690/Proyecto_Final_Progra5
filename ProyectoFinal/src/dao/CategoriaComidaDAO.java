@@ -23,7 +23,8 @@ public class CategoriaComidaDAO {
             
             while (rs.next()) {
                 CategoriaComida cc = new CategoriaComida();
-                // Se agrega el objeto vacío a la lista para contar los registros de forma simple
+                cc.setId_categoria(rs.getInt("id_categoria"));
+                cc.setNombre(rs.getString("nombre"));
                 lista.add(cc);
             }
         } catch (SQLException e) {

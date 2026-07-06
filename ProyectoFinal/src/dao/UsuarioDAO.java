@@ -12,7 +12,7 @@ public class UsuarioDAO {
 
     // Método directo para validar el login del usuario
     public boolean login(String usuario, String contrasena) {
-        String sql = "SELECT * FROM empleado WHERE codigo_emp = ? AND contrasena = ?";
+        String sql = "SELECT * FROM usuario WHERE codigo = ? AND contrasena = ?";
         try (Connection con = conexionDB.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
             

@@ -89,4 +89,29 @@ public class BebidaDAO {
         }
         return lista;
     }
+
+    // 5. READ BY ID (Buscar una bebida específica)
+    public Bebida findById(int idBebida) {
+        String sql = "SELECT * FROM bebida WHERE id_bebida = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idBebida);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Bebida b = new Bebida();
+                    b.setId_bebida(rs.getInt("id_bebida"));
+                    b.setNombre(rs.getString("nombre"));
+                    b.setId_categoria(rs.getInt("id_categoria"));
+                    b.setDescripcion(rs.getString("descripcion"));
+                    b.setPrecio(rs.getBigDecimal("precio"));
+                    b.setActivo(rs.getInt("activo"));
+                    return b;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al buscar bebida por ID: " + e.getMessage());
+        }
+        return null;
+    }
 }

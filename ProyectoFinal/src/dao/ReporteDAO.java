@@ -20,8 +20,9 @@ public class ReporteDAO {
 
     /**
      * Reporte: Cantidad de personas atendidas por día en el SALÓN.
-     * Se calcula sumando reserva.cantidad_pers de las comandas de origen
-     * 'salon' que están ligadas a una reserva (comanda.id_reserva).
+     * La tabla comanda no tiene columna id_reserva, así que la comanda se
+     * liga a su reserva por mesa y fecha: r.id_mesa = c.id_mesa y
+     * r.fecha_reserva = DATE(c.hora_orden). Se suman reserva.cantidad_pers.
      * Key = fecha (yyyy-MM-dd), Value = total de personas ese día.
      */
     public Map<String, Integer> personasAtendidaXDiaSalon() throws Exception {
@@ -43,7 +44,8 @@ public class ReporteDAO {
         Map<String, Integer> resultado = new LinkedHashMap<>();
         String sql = "SELECT DATE(c.hora_orden) AS fecha, SUM(r.cantidad_pers) AS total_personas "
                    + "FROM comanda c "
-                   + "JOIN reserva r ON c.id_reserva = r.id_reserva "
+                   + "JOIN reserva r ON r.id_mesa = c.id_mesa "
+                   + "AND r.fecha_reserva = DATE(c.hora_orden) "
                    + "WHERE c.origen = ? "
                    + "GROUP BY DATE(c.hora_orden) "
                    + "ORDER BY fecha";

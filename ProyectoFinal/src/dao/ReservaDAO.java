@@ -1,72 +1,205 @@
 package dao;
 
+import connection.ConnectionDB;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import model.Reserva;
 
+/**
+ * DAO for the {@code reserva} table. Reservations belong to the dining room
+ * only (the bar takes no reservations). {@code id_mesa} is optional until a
+ * table is assigned, and {@code fecha_creacion} is set by MySQL
+ * (CURRENT_TIMESTAMP) so it is never inserted from Java.
+ */
 public class ReservaDAO {
-    
-    // Configuración básica de tu base de datos
-    private final String url = "jdbc:mysql://localhost:3306/registro";
-    private final String user = "root";
-    private final String pass = "123456"; // Pon aquí tu contraseña de MySQL
 
-    // 1. Método para INSERTAR una reserva (pasando los datos directos y sin catch)
-    public boolean insert(String nombreCliente, String fecha, String hora, int personas, String estado) throws Exception {
-        String sql = "INSERT INTO reserva (nombre_cliente, fecha, hora, personas, estado) VALUES (?, ?, ?, ?, ?)";
-        
-        Connection con = DriverManager.getConnection(url, user, pass);
-        PreparedStatement ps = con.prepareStatement(sql);
-        
-        ps.setString(1, nombreCliente);
-        ps.setString(2, fecha);
-        ps.setString(3, hora);
-        ps.setInt(4, personas);
-        ps.setString(5, estado);
-        
-        int filas = ps.executeUpdate();
-        
-        ps.close();
-        con.close();
-        
-        return filas > 0;
-    }
+    private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 2. Método para BUSCAR DISPONIBILIDAD (sin catch)
-    public boolean findDisponibilidad(String fecha, String hora, int personas) throws Exception {
-        String sql = "SELECT COUNT(*) FROM reserva WHERE fecha = ? AND hora = ?";
-        boolean disponible = false;
-        
-        Connection con = DriverManager.getConnection(url, user, pass);
-        PreparedStatement ps = con.prepareStatement(sql);
-        
-        ps.setString(1, fecha);
-        ps.setString(2, hora);
-        
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            int reservasExistentes = rs.getInt(1);
-            // Si hay menos de 10 reservas, hay espacio
-            if (reservasExistentes < 10) {
-                disponible = true;
+    // 1. CREATE (Insertar nueva reserva)
+    public boolean insert(Reserva reserva) {
+        String sql = "INSERT INTO reserva (nombre_cliente, telefono, fecha_reserva, hora_reserva, cantidad_pers, incluye_ninos, id_mesa, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, reserva.getNombre_cliente());
+            ps.setString(2, reserva.getTelefono());
+            ps.setDate(3, Date.valueOf(reserva.getFecha_reserva()));
+            ps.setTime(4, Time.valueOf(reserva.getHora_reserva()));
+            ps.setInt(5, reserva.getCantidad_pers());
+            ps.setBoolean(6, reserva.isIncluye_ninos());
+            if (reserva.getId_mesa() > 0) {
+                ps.setInt(7, reserva.getId_mesa());
+            } else {
+                ps.setNull(7, Types.INTEGER); // aún sin mesa asignada
             }
+            ps.setString(8, reserva.getEstado() != null ? reserva.getEstado() : "pendiente");
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al insertar reserva: " + e.getMessage());
+            return false;
         }
-        
-        rs.close();
-        ps.close();
-        con.close();
-        
-        return disponible;
     }
 
-    // 3. Método para BUSCAR TODAS las reservas (sin catch)
-    public ResultSet findAll() throws Exception {
+    // 2. UPDATE (Modificar reserva existente)
+    public boolean update(Reserva reserva) {
+        String sql = "UPDATE reserva SET nombre_cliente = ?, telefono = ?, fecha_reserva = ?, hora_reserva = ?, cantidad_pers = ?, incluye_ninos = ?, id_mesa = ?, estado = ? WHERE id_reserva = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, reserva.getNombre_cliente());
+            ps.setString(2, reserva.getTelefono());
+            ps.setDate(3, Date.valueOf(reserva.getFecha_reserva()));
+            ps.setTime(4, Time.valueOf(reserva.getHora_reserva()));
+            ps.setInt(5, reserva.getCantidad_pers());
+            ps.setBoolean(6, reserva.isIncluye_ninos());
+            if (reserva.getId_mesa() > 0) {
+                ps.setInt(7, reserva.getId_mesa());
+            } else {
+                ps.setNull(7, Types.INTEGER);
+            }
+            ps.setString(8, reserva.getEstado());
+            ps.setInt(9, reserva.getId_reserva());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar reserva: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 3. UPDATE estado (pendiente / confirmada / cancelada / atendida)
+    public boolean updateEstado(int idReserva, String nuevoEstado) {
+        String sql = "UPDATE reserva SET estado = ? WHERE id_reserva = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, nuevoEstado);
+            ps.setInt(2, idReserva);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar estado de reserva: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 4. DELETE (Eliminar reserva por ID)
+    public boolean delete(int idReserva) {
+        String sql = "DELETE FROM reserva WHERE id_reserva = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idReserva);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al eliminar reserva: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 5. READ ALL (Listar todas las reservas)
+    public List<Reserva> findAll() {
         String sql = "SELECT * FROM reserva";
-        
-        Connection con = DriverManager.getConnection(url, user, pass);
-        PreparedStatement ps = con.prepareStatement(sql);
-        
-        return ps.executeQuery(); 
+        List<Reserva> lista = new ArrayList<>();
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al listar reservas: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    // 6. READ BY ID (Buscar una reserva específica)
+    public Reserva findById(int idReserva) {
+        String sql = "SELECT * FROM reserva WHERE id_reserva = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idReserva);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al buscar reserva por ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // 7. READ por fecha (agenda del día)
+    public List<Reserva> findByFecha(LocalDate fecha) {
+        String sql = "SELECT * FROM reserva WHERE fecha_reserva = ?";
+        List<Reserva> lista = new ArrayList<>();
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(fecha));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al buscar reservas por fecha: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    /**
+     * Checks whether there is room for another reservation at the given
+     * date/time: available while fewer than 10 non-cancelled reservations
+     * exist for that slot.
+     */
+    public boolean findDisponibilidad(LocalDate fecha, LocalTime hora) {
+        String sql = "SELECT COUNT(*) FROM reserva WHERE fecha_reserva = ? AND hora_reserva = ? AND estado <> 'cancelada'";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(fecha));
+            ps.setTime(2, Time.valueOf(hora));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) < 10;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al consultar disponibilidad: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /** Maps the current ResultSet row to a Reserva model. */
+    private Reserva mapRow(ResultSet rs) throws SQLException {
+        Reserva r = new Reserva();
+        r.setId_reserva(rs.getInt("id_reserva"));
+        r.setNombre_cliente(rs.getString("nombre_cliente"));
+        r.setTelefono(rs.getString("telefono"));
+        Date fechaReserva = rs.getDate("fecha_reserva");
+        r.setFecha_reserva(fechaReserva != null ? fechaReserva.toLocalDate() : null);
+        Time horaReserva = rs.getTime("hora_reserva");
+        r.setHora_reserva(horaReserva != null ? horaReserva.toLocalTime() : null);
+        r.setCantidad_pers(rs.getInt("cantidad_pers"));
+        r.setIncluye_ninos(rs.getBoolean("incluye_ninos"));
+        r.setId_mesa(rs.getInt("id_mesa")); // 0 cuando aún no hay mesa
+        r.setEstado(rs.getString("estado"));
+        Timestamp fechaCreacion = rs.getTimestamp("fecha_creacion");
+        r.setFecha_creacion(fechaCreacion != null ? fechaCreacion.toLocalDateTime() : null);
+        return r;
     }
 }

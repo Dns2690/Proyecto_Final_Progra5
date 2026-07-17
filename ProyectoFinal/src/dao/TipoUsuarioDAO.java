@@ -10,9 +10,7 @@ import java.util.List;
 import model.TipoUsuario;
 
 /**
- * DAO for the {@code tipo_usuario} table (employee roles). Each role has a
- * UNIQUE 3-letter {@code prefijo} (e.g. SAL, COS, BAR, CAJ) used to build
- * employee codes: prefix + last 3 digits of the cedula, e.g. SAL001.
+ * DAO para la entidad TipoUsuario, con operaciones CRUD y consultas por prefijo.
  */
 public class TipoUsuarioDAO {
 
@@ -116,7 +114,7 @@ public class TipoUsuarioDAO {
         return null;
     }
 
-    /** Maps the current ResultSet row to a TipoUsuario model. */
+    /** Mapea la fila actual del ResultSet a un modelo TipoUsuario. */
     private TipoUsuario mapRow(ResultSet rs) throws SQLException {
         TipoUsuario t = new TipoUsuario();
         t.setId_tipo(rs.getInt("id_tipo"));

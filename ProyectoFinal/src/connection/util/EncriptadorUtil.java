@@ -5,9 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Utility class for hashing passwords with MD5 before they are sent to the
- * database. Per project rules, plaintext passwords are never stored or
- * compared: every insert/login hashes the password in Java first.
+ * Clase de utilidades para encriptación y hashing.
  */
 public final class EncriptadorUtil {
 
@@ -15,11 +13,9 @@ public final class EncriptadorUtil {
     }
 
     /**
-     * Returns the MD5 hash of the given text as a 32-character lowercase
-     * hexadecimal string.
-     *
-     * @param texto plaintext to hash (e.g. a password)
-     * @return MD5 hex digest, or {@code null} if {@code texto} is null
+     * Retorna el hash MD5 de un texto dado.
+     * @param texto texto a hashear
+     * @return hash MD5 como cadena hexadecimal de 32 caracteres en minúscula
      */
     public static String md5(String texto) {
         if (texto == null) {
@@ -34,7 +30,6 @@ public final class EncriptadorUtil {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            // MD5 is guaranteed to exist on every JVM
             throw new IllegalStateException("MD5 no disponible en esta JVM", e);
         }
     }

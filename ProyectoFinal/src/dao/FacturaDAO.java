@@ -14,15 +14,11 @@ import java.util.List;
 import model.Factura;
 
 /**
- * DAO for the {@code factura} table. Applies the Costa Rica sales tax
- * (IVA 13%) when {@code impuesto}/{@code total} are not provided: they are
- * computed from {@code subtotal} at insert time. A comanda may have several
- * facturas when the bill is split per person, hence
- * {@link #findByComanda(int)} returns a list.
+ * DAO para la entidad Factura, con operaciones CRUD y consultas por comanda.
  */
 public class FacturaDAO {
 
-    /** Costa Rica sales tax rate (13%). */
+    /** Costa Rica IVA (13%). */
     public static final BigDecimal IVA = new BigDecimal("0.13");
 
     private final ConnectionDB conexionDB = new ConnectionDB();
@@ -33,12 +29,9 @@ public class FacturaDAO {
     }
 
     /**
-     * Inserts the factura and returns the generated {@code id_factura},
-     * needed right away to insert its {@code detalle_factura} rows.
-     * If {@code impuesto} or {@code total} are null they are computed from
-     * {@code subtotal} applying IVA 13%.
-     *
-     * @return generated id, or -1 on failure
+     * Inserta una nueva factura y retorna el ID generado. Retorna -1 si falla.
+     * @param factura objeto Factura a insertar
+     * @return ID de la factura insertada, o -1 si hubo un error    
      */
     public int insertGetId(Factura factura) {
         aplicarIvaSiFalta(factura);
@@ -180,8 +173,8 @@ public class FacturaDAO {
     }
 
     /**
-     * Fills {@code impuesto} (subtotal * 13%) and {@code total}
-     * (subtotal + impuesto) when they are missing, rounding to 2 decimals.
+     * LLena los campos de impuesto y total si son nulos, aplicando el IVA al subtotal.
+     * @param factura objeto Factura a procesar
      */
     private void aplicarIvaSiFalta(Factura factura) {
         if (factura.getSubtotal() == null) {
@@ -195,7 +188,7 @@ public class FacturaDAO {
         }
     }
 
-    /** Maps the current ResultSet row to a Factura model. */
+    /** Mapea la fila actual del ResultSet a un modelo Factura. */
     private Factura mapRow(ResultSet rs) throws SQLException {
         Factura f = new Factura();
         f.setId_factura(rs.getInt("id_factura"));

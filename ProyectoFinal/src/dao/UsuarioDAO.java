@@ -11,11 +11,7 @@ import java.util.List;
 import model.Usuario;
 
 /**
- * DAO for the {@code usuario} table (employees). The primary key is the
- * employee code ({@code codigo}, e.g. SAL001: role prefix + last 3 digits of
- * the cedula). Passwords are always hashed with MD5 in Java (via
- * {@link EncriptadorUtil}) before reaching the database — plaintext is never
- * stored or compared.
+ * DAO para la entidad Usuario, con operaciones CRUD y consultas por código y credenciales.
  */
 public class UsuarioDAO {
 
@@ -148,7 +144,7 @@ public class UsuarioDAO {
         return null;
     }
 
-    /** Maps the current ResultSet row to a Usuario model. */
+    /** Mapea la fila actual del ResultSet a un modelo Usuario. */
     private Usuario mapRow(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setCodigo(rs.getString("codigo"));

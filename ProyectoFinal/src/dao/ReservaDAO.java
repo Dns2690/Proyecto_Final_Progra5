@@ -16,10 +16,7 @@ import java.util.List;
 import model.Reserva;
 
 /**
- * DAO for the {@code reserva} table. Reservations belong to the dining room
- * only (the bar takes no reservations). {@code id_mesa} is optional until a
- * table is assigned, and {@code fecha_creacion} is set by MySQL
- * (CURRENT_TIMESTAMP) so it is never inserted from Java.
+ * DAO para la entidad Reserva, con operaciones CRUD y consultas por fecha y disponibilidad.
  */
 public class ReservaDAO {
 
@@ -162,9 +159,9 @@ public class ReservaDAO {
     }
 
     /**
-     * Checks whether there is room for another reservation at the given
-     * date/time: available while fewer than 10 non-cancelled reservations
-     * exist for that slot.
+     * Chequea si hay disponibilidad para una nueva reserva en la fecha y hora dadas.
+     * Devuelve true si hay menos de 10 reservas activas (no canceladas)
+     * para esa fecha y hora, false si ya hay 10 o más.
      */
     public boolean findDisponibilidad(LocalDate fecha, LocalTime hora) {
         String sql = "SELECT COUNT(*) FROM reserva WHERE fecha_reserva = ? AND hora_reserva = ? AND estado <> 'cancelada'";
@@ -184,7 +181,7 @@ public class ReservaDAO {
         return false;
     }
 
-    /** Maps the current ResultSet row to a Reserva model. */
+    /** Mapea la fila actual del ResultSet a un modelo Reserva. */
     private Reserva mapRow(ResultSet rs) throws SQLException {
         Reserva r = new Reserva();
         r.setId_reserva(rs.getInt("id_reserva"));

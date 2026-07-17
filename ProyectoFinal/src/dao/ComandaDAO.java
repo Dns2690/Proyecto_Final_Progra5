@@ -13,10 +13,7 @@ import java.util.List;
 import model.Comanda;
 
 /**
- * DAO for the {@code comanda} table. A comanda is an order created either in
- * the dining room ({@code ORIGEN = 'salon'}) or at the bar
- * ({@code ORIGEN = 'bar'}); bar comandas have no table, so {@code id_mesa}
- * is stored as NULL when the model carries 0.
+ * DAO para la entidad Comanda, con operaciones CRUD y consultas por mesa, empleado, origen y estado.
  */
 public class ComandaDAO {
 
@@ -28,10 +25,9 @@ public class ComandaDAO {
     }
 
     /**
-     * Inserts the comanda and returns the generated {@code id_comanda},
-     * needed right away to insert its {@code detalle_comanda} rows.
-     *
-     * @return generated id, or -1 on failure
+     * Inserta una nueva comanda y retorna el ID generado. Retorna -1 si falla.
+     * @param comanda objeto Comanda a insertar
+     * @return ID de la comanda insertada, o -1 si hubo un error
      */
     public int insertGetId(Comanda comanda) {
         String sql = "INSERT INTO comanda (ORIGEN, codigo_emp, id_mesa, hora_orden, hora_generada, estado) VALUES (?, ?, ?, ?, ?, ?)";
@@ -217,7 +213,7 @@ public class ComandaDAO {
         return lista;
     }
 
-    /** Maps the current ResultSet row to a Comanda model. */
+    /** Mapea la fila actual del ResultSet a un modelo Comanda. */
     private Comanda mapRow(ResultSet rs) throws SQLException {
         Comanda c = new Comanda();
         c.setId_comanda(rs.getInt("id_comanda"));

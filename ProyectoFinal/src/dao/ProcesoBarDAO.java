@@ -12,10 +12,7 @@ import java.util.List;
 import model.ProcesoBar;
 
 /**
- * DAO for the {@code proceso_bar} table, which tracks when the bar receives
- * a comanda and when it is ready. {@code id_comanda} is UNIQUE, so each
- * comanda has at most one bar process; rows with {@code hora_lista IS NULL}
- * are the pending queue shown to the bartender.
+ * DAO para la entidad ProcesoBar, con operaciones CRUD y consultas por comanda.
  */
 public class ProcesoBarDAO {
 
@@ -167,7 +164,7 @@ public class ProcesoBarDAO {
         return lista;
     }
 
-    /** Maps the current ResultSet row to a ProcesoBar model. */
+    /** Mapea la fila actual del ResultSet a un modelo ProcesoBar. */
     private ProcesoBar mapRow(ResultSet rs) throws SQLException {
         ProcesoBar p = new ProcesoBar();
         p.setId_proceso(rs.getInt("id_proceso"));

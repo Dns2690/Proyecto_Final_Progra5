@@ -12,10 +12,7 @@ import java.util.List;
 import model.ProcesoCocina;
 
 /**
- * DAO for the {@code proceso_cocina} table, which tracks when the kitchen
- * receives a comanda and when it is ready. {@code id_comanda} is UNIQUE, so
- * each comanda has at most one kitchen process; rows with
- * {@code hora_lista IS NULL} are the pending queue shown to the cook.
+ * DAO  para la entidad ProcesoCocina, con operaciones CRUD y consultas por comanda.
  */
 public class ProcesoCocinaDAO {
 
@@ -167,7 +164,7 @@ public class ProcesoCocinaDAO {
         return lista;
     }
 
-    /** Maps the current ResultSet row to a ProcesoCocina model. */
+    /** Mapea la fila actual del ResultSet a un modelo ProcesoCocina. */
     private ProcesoCocina mapRow(ResultSet rs) throws SQLException {
         ProcesoCocina p = new ProcesoCocina();
         p.setId_proceso(rs.getInt("id_proceso"));

@@ -18,11 +18,7 @@ import model.AsignacionSeccion;
 import model.SeccionSalon;
 
 /**
- * DAO for the {@code asignacion_seccion} table: which salonero works which
- * dining-room section on a given date. The DB enforces one section per
- * salonero per day via UNIQUE(codigo_sal, fecha); the daily rotation rule
- * (each salonero moves to the next section every day) is implemented here in
- * {@link #generarRotacionDiaria(LocalDate)}.
+ * DAO para la entidad AsignacionSeccion, con operaciones CRUD y generación de rotación diaria.
  */
 public class AsignacionSeccionDAO {
 
@@ -165,18 +161,10 @@ public class AsignacionSeccionDAO {
     }
 
     /**
-     * Generates the daily section rotation for the given date and returns
-     * the day's assignments. Idempotent: if the date already has assignments
-     * they are returned as-is (the DB's UNIQUE(codigo_sal, fecha) also
-     * guards against duplicates).
-     *
-     * Rotation rule: each active salonero moves to the section AFTER the one
-     * they had on the most recent assigned day (wrapping around). Saloneros
-     * with no previous assignment get the first sections still unused that
-     * day, in order.
-     *
-     * @return the assignments for that date (generated or pre-existing);
-     *         empty list if there are no active saloneros/sections or on error
+     * Genera la rotación diaria de secciones para todos los saloneros activos en la fecha dada.
+     * Si ya existen asignaciones para esa fecha, no se regeneran y se retornan las existentes.
+     * @param fecha fecha para la cual generar la rotación
+     * @return lista de asignaciones generadas o existentes para la fecha
      */
     public List<AsignacionSeccion> generarRotacionDiaria(LocalDate fecha) {
         List<AsignacionSeccion> existentes = findByFecha(fecha);

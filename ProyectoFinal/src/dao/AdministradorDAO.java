@@ -11,10 +11,7 @@ import java.util.List;
 import model.Administrador;
 
 /**
- * DAO for the {@code administrador} table. Admins log in separately from
- * employees ({@code usuario} table). Passwords are hashed with MD5 in Java
- * (via {@link EncriptadorUtil}) before reaching the database, same contract
- * as {@code UsuarioDAO}: plaintext in, hash stored/compared.
+ * DAO para la entidad Administrador, con operaciones CRUD y login.
  */
 public class AdministradorDAO {
 
@@ -119,10 +116,10 @@ public class AdministradorDAO {
     }
 
     /**
-     * Validates admin credentials: hashes the plaintext password with MD5
-     * and compares it in the query.
-     *
-     * @return the authenticated Administrador, or {@code null} if invalid
+     * Valida el login de un administrador comparando el usuario y la contraseña (en texto plano) con la base de datos.
+     * @param usuario nombre de usuario del administrador
+     * @param contrasena contraseña en texto plano del administrador
+     * @return objeto Administrador si las credenciales son correctas, o null si no son válidas
      */
     public Administrador login(String usuario, String contrasena) {
         String sql = "SELECT * FROM administrador WHERE usuario = ? AND contrasena = ?";
@@ -143,7 +140,7 @@ public class AdministradorDAO {
         return null;
     }
 
-    /** Maps the current ResultSet row to an Administrador model. */
+    /** Retorna un objeto Administrador mapeado desde una fila del ResultSet. */
     private Administrador mapRow(ResultSet rs) throws SQLException {
         Administrador a = new Administrador();
         a.setId_admin(rs.getInt("id_admin"));

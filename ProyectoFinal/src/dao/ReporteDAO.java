@@ -9,10 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * DAO responsible for generating aggregated data used in the chart-based
- * reports required by the project (Reportes section).
- * All methods return LinkedHashMap so the insertion order (usually by date)
- * is preserved for chart rendering (e.g. JFreeChart).
+ * DAO para la generación de reportes relacionados con comandas, reservas y procesos.
  */
 public class ReporteDAO {
 
@@ -20,10 +17,7 @@ public class ReporteDAO {
 
     /**
      * Reporte: Cantidad de personas atendidas por día en el SALÓN.
-     * La tabla comanda no tiene columna id_reserva, así que la comanda se
-     * liga a su reserva por mesa y fecha: r.id_mesa = c.id_mesa y
-     * r.fecha_reserva = DATE(c.hora_orden). Se suman reserva.cantidad_pers.
-     * Key = fecha (yyyy-MM-dd), Value = total de personas ese día.
+  
      */
     public Map<String, Integer> personasAtendidaXDiaSalon() throws Exception {
         return personasAtendidaXDia("salon");
@@ -31,10 +25,7 @@ public class ReporteDAO {
 
     /**
      * Reporte: Cantidad de personas atendidas por día en el BAR.
-     * NOTA: según las reglas del negocio, el bar no maneja reservaciones
-     * (solo el salón), por lo que este reporte normalmente devolverá vacío
-     * a menos que se generen comandas de bar ligadas a una reserva.
-     * Key = fecha (yyyy-MM-dd), Value = total de personas ese día.
+  
      */
     public Map<String, Integer> personasAtendidaXDiaBar() throws Exception {
         return personasAtendidaXDia("bar");
@@ -98,9 +89,7 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de comandas que fueron ATENDIDAS (cerradas) en el
-     * bar, agrupadas por día. Solo cuenta las comandas con estado 'cerrada'.
-     * Key = fecha (yyyy-MM-dd), Value = total de comandas cerradas ese día.
+     * Reporte: Cantidad de comandas que fueron ATENDIDAS 
      */
     public Map<String, Integer> comandasAtendidasBar() throws Exception {
         Map<String, Integer> resultado = new LinkedHashMap<>();
@@ -125,10 +114,7 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de comandas atendidas en la COCINA (hora_lista no
-     * nula en proceso_cocina), desglosadas según si la comanda original
-     * era de salón o de bar.
-     * Devuelve un mapa con exactamente dos llaves: "salon" y "bar".
+     * Reporte: Cantidad de comandas atendidas en la COCINA 
      */
     public Map<String, Integer> comandasCocinaDesglosadas() throws Exception {
         Map<String, Integer> resultado = new LinkedHashMap<>();

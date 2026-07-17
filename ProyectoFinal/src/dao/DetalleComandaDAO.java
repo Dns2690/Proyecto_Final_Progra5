@@ -12,10 +12,7 @@ import model.Comida;
 import model.DetalleComanda;
 
 /**
- * DAO for the {@code detalle_comanda} table. Each row references either a
- * {@code comida} or a {@code bebida} polymorphically through
- * {@code tipo_item ENUM('comida','bebida')} + {@code id_item} (no FK), so
- * item resolution is done here by branching on {@code tipo_item}.
+ * DAO para la entidad DetalleComanda, con operaciones CRUD y consultas por comanda.
  */
 public class DetalleComandaDAO {
 
@@ -112,11 +109,9 @@ public class DetalleComandaDAO {
     }
 
     /**
-     * Resolves the display name of the item referenced by a detail row,
-     * branching on {@code tipo_item} to query {@code comida} or
-     * {@code bebida}.
-     *
-     * @return item name, or {@code null} if the item no longer exists
+     * Resuelve el nombre del ítem (comida o bebida) dado un DetalleComanda.
+     * @param detalle objeto DetalleComanda
+     * @return nombre del ítem, o null si no se encuentra
      */
     public String getNombreItem(DetalleComanda detalle) {
         if ("comida".equals(detalle.getTipo_item())) {
@@ -130,7 +125,7 @@ public class DetalleComandaDAO {
         return null;
     }
 
-    /** Maps the current ResultSet row to a DetalleComanda model. */
+    /** Mapea la fila actual del ResultSet a un modelo DetalleComanda. */
     private DetalleComanda mapRow(ResultSet rs) throws SQLException {
         DetalleComanda d = new DetalleComanda();
         d.setId_detalle(rs.getInt("id_detalle"));

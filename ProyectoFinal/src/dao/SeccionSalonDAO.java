@@ -10,9 +10,7 @@ import java.util.List;
 import model.SeccionSalon;
 
 /**
- * DAO for the {@code seccion_salon} table (dining-room sections). Sections
- * group {@code mesa} rows and are rotated daily among saloneros through
- * {@code asignacion_seccion}.
+ * DAO para la entidad SeccionSalon, con operaciones CRUD.
  */
 public class SeccionSalonDAO {
 
@@ -96,7 +94,7 @@ public class SeccionSalonDAO {
         return null;
     }
 
-    /** Maps the current ResultSet row to a SeccionSalon model. */
+    /** Mapea la fila actual del ResultSet a un modelo SeccionSalon. */
     private SeccionSalon mapRow(ResultSet rs) throws SQLException {
         SeccionSalon s = new SeccionSalon();
         s.setId_seccion(rs.getInt("id_seccion"));

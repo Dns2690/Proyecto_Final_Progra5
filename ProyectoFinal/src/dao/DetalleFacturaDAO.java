@@ -10,10 +10,7 @@ import java.util.List;
 import model.DetalleFactura;
 
 /**
- * DAO for the {@code detalle_factura} table, the link between a factura and
- * the {@code detalle_comanda} rows it bills. When a table's bill is split
- * per person, each factura gets its own subset of the comanda's detail rows
- * through this table.
+ * DAO para la entidad DetalleFactura, con operaciones CRUD y consultas por factura.
  */
 public class DetalleFacturaDAO {
 
@@ -134,7 +131,7 @@ public class DetalleFacturaDAO {
         return lista;
     }
 
-    /** Maps the current ResultSet row to a DetalleFactura model. */
+    /** Mapea la fila actual del ResultSet a un modelo DetalleFactura. */
     private DetalleFactura mapRow(ResultSet rs) throws SQLException {
         DetalleFactura d = new DetalleFactura();
         d.setId_det_fac(rs.getInt("id_det_fac"));

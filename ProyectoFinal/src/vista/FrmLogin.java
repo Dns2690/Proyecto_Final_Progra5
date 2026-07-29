@@ -4,12 +4,16 @@
  */
 package vista;
 
+import javax.swing.JOptionPane;
+import session.SesionActual;
+
 /**
+ * Ventana de login. Segun el rol abre la pantalla que le toca.
  *
  * @author valer
  */
 public class FrmLogin extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmLogin.class.getName());
 
     /**
@@ -17,6 +21,8 @@ public class FrmLogin extends javax.swing.JFrame {
      */
     public FrmLogin() {
         initComponents();
+        setLocationRelativeTo(null); // centra la ventana
+        IblMensaje.setText(" ");
     }
 
     /**
@@ -28,6 +34,7 @@ public class FrmLogin extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        grupoTipo = new javax.swing.ButtonGroup();
         IblTitulo = new javax.swing.JLabel();
         IblLogo = new javax.swing.JLabel();
         rbEmpleado = new javax.swing.JRadioButton();
@@ -41,29 +48,38 @@ public class FrmLogin extends javax.swing.JFrame {
         btnSalir = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Restaurante - Login");
+        setResizable(false);
 
         IblTitulo.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         IblTitulo.setText("Restaurante - Inicio de Sesión");
 
-        IblLogo.setText("jLabel1");
-
+        grupoTipo.add(rbEmpleado);
         rbEmpleado.setSelected(true);
-        rbEmpleado.setText("rbEmpleado");
+        rbEmpleado.setText("Empleado");
 
-        rbAdmin.setText("rbAdmin");
+        grupoTipo.add(rbAdmin);
+        rbAdmin.setText("Administrador");
 
         IblUsuario.setText("Código / Usuario:");
 
         IblContrasena.setText("Contraseña:");
 
-        pwdContrasena.setText("jPasswordField1");
+        pwdContrasena.addActionListener((java.awt.event.ActionEvent evt) -> {
+            pwdContrasenaActionPerformed(evt);
+        });
 
         IblMensaje.setForeground(new java.awt.Color(255, 51, 51));
-        IblMensaje.setText("jLabel1");
 
         btnIngresar.setText("Ingresar");
+        btnIngresar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnIngresarActionPerformed(evt);
+        });
 
         btnSalir.setText("Salir");
+        btnSalir.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnSalirActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -84,7 +100,7 @@ public class FrmLogin extends javax.swing.JFrame {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(rbAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(IblMensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(IblMensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 286, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(btnIngresar, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
@@ -127,6 +143,78 @@ public class FrmLogin extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIngresarActionPerformed
+        ingresar();
+    }//GEN-LAST:event_btnIngresarActionPerformed
+
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_btnSalirActionPerformed
+
+    private void pwdContrasenaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pwdContrasenaActionPerformed
+        // si le dan enter en la contrasena es lo mismo que darle al boton
+        ingresar();
+    }//GEN-LAST:event_pwdContrasenaActionPerformed
+
+    /** Valida los campos, hace el login y abre la ventana del rol. */
+    private void ingresar() {
+        String usuario = txtUsuario.getText().trim();
+        String contrasena = new String(pwdContrasena.getPassword());
+
+        // reviso que no dejen campos vacios
+        if (usuario.isEmpty() || contrasena.isEmpty()) {
+            IblMensaje.setText("Debe llenar los dos campos");
+            return;
+        }
+
+        boolean entro;
+        if (rbAdmin.isSelected()) {
+            entro = SesionActual.iniciarSesionAdmin(usuario, contrasena);
+        } else {
+            entro = SesionActual.iniciarSesionEmpleado(usuario, contrasena);
+        }
+
+        if (!entro) {
+            IblMensaje.setText("Usuario o contraseña incorrectos");
+            pwdContrasena.setText("");
+            return;
+        }
+
+        IblMensaje.setText(" ");
+        abrirVentana();
+    }
+
+    /** Abre el JFrame que corresponde segun el rol de la sesion. */
+    private void abrirVentana() {
+        javax.swing.JFrame ventana;
+
+        if (SesionActual.esAdmin()) {
+            ventana = new FrmAdmin();
+        } else {
+            String prefijo = SesionActual.getPrefijo();
+            if ("SAL".equals(prefijo)) {
+                ventana = new FrmSalonero();
+            } else if ("COS".equals(prefijo)) {
+                ventana = new FrmCocinero();
+            } else if ("BAR".equals(prefijo)) {
+                ventana = new FrmBartender();
+            } else if ("CAJ".equals(prefijo)) {
+                ventana = new FrmCajero();
+            } else {
+                // por si el tipo de usuario no tiene pantalla todavia
+                JOptionPane.showMessageDialog(this,
+                        "El rol " + SesionActual.getRol() + " no tiene pantalla asignada.",
+                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                SesionActual.cerrarSesion();
+                return;
+            }
+        }
+
+        ventana.setLocationRelativeTo(null);
+        ventana.setVisible(true);
+        this.dispose(); // cierro el login
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -134,7 +222,7 @@ public class FrmLogin extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -160,6 +248,7 @@ public class FrmLogin extends javax.swing.JFrame {
     private javax.swing.JLabel IblUsuario;
     private javax.swing.JButton btnIngresar;
     private javax.swing.JButton btnSalir;
+    private javax.swing.ButtonGroup grupoTipo;
     private javax.swing.JPasswordField pwdContrasena;
     private javax.swing.JRadioButton rbAdmin;
     private javax.swing.JRadioButton rbEmpleado;

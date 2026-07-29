@@ -7,19 +7,92 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.ChartPanel;
 
+import dao.BebidaDAO;
+import dao.CategoriaBebidaDAO;
+import dao.CategoriaComidaDAO;
+import dao.ComidaDAO;
+import dao.AsignacionSeccionDAO;
+import dao.MesaDAO;
+import dao.ReporteDAO;
+import dao.SeccionSalonDAO;
+import dao.TipoUsuarioDAO;
+import dao.UsuarioDAO;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import model.AsignacionSeccion;
+import model.Bebida;
+import model.CategoriaBebida;
+import model.CategoriaComida;
+import model.Comida;
+import model.Mesa;
+import model.SeccionSalon;
+import model.TipoUsuario;
+import model.Usuario;
+import session.SesionActual;
+
 /**
  *
  * @author valer
  */
 public class FrmAdmin extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmAdmin.class.getName());
+
+    private final CategoriaComidaDAO catComidaDAO = new CategoriaComidaDAO();
+    private final CategoriaBebidaDAO catBebidaDAO = new CategoriaBebidaDAO();
+    private final ComidaDAO comidaDAO = new ComidaDAO();
+    private final BebidaDAO bebidaDAO = new BebidaDAO();
+    private final SeccionSalonDAO seccionDAO = new SeccionSalonDAO();
+    private final MesaDAO mesaDAO = new MesaDAO();
+    private final TipoUsuarioDAO tipoDAO = new TipoUsuarioDAO();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final AsignacionSeccionDAO asignacionDAO = new AsignacionSeccionDAO();
+    private final ReporteDAO reporteDAO = new ReporteDAO();
+
+    // me sirve para que los combos no disparen sus eventos mientras los estoy llenando
+    private boolean cargandoCombos = false;
+
+    // guardo las listas para saber a que fila de la tabla corresponde cada registro
+    private List<CategoriaComida> catComidas = new ArrayList<>();
+    private List<CategoriaBebida> catBebidas = new ArrayList<>();
+    private List<Comida> comidas = new ArrayList<>();
+    private List<Bebida> bebidas = new ArrayList<>();
+    private List<SeccionSalon> secciones = new ArrayList<>();
+    private List<Mesa> mesas = new ArrayList<>();
+    private List<TipoUsuario> tipos = new ArrayList<>();
+    private List<Usuario> usuarios = new ArrayList<>();
+    private List<Usuario> saloneros = new ArrayList<>();
+    private List<AsignacionSeccion> rotaciones = new ArrayList<>();
 
     /**
      * Creates new form FrmAdmin
      */
     public FrmAdmin() {
         initComponents();
+        setLocationRelativeTo(null);
+        setTitle("Restaurante - Administrador");
+
+        tblCatComida.setDefaultEditor(Object.class, null);
+        tblCatBebida.setDefaultEditor(Object.class, null);
+        tblComidas.setDefaultEditor(Object.class, null);
+        tblBebidas.setDefaultEditor(Object.class, null);
+        tblSecciones.setDefaultEditor(Object.class, null);
+        tblMesas.setDefaultEditor(Object.class, null);
+        tblTipos.setDefaultEditor(Object.class, null);
+        tblUsuarios.setDefaultEditor(Object.class, null);
+        tblRotacion.setDefaultEditor(Object.class, null);
+
+        if (SesionActual.esAdmin()) {
+            IblBienvenida.setText("Admin: " + SesionActual.getNombre());
+        }
+        txtFechaRot.setText(LocalDate.now().toString());
+        cargarCatalogos();
+        cargarSalon();
+        cargarPersonal();
     }
 
     /**
@@ -157,20 +230,26 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnCerrarSesion.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesion.setText("Cerrar Sesion");
+        btnCerrarSesion.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarSesionActionPerformed(evt);
+        });
 
         tabAdmin.setPreferredSize(new java.awt.Dimension(705, 100));
 
         tblTipos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
                 "ID", "Nombre", "Prefijo"
             }
         ));
+        tblTipos.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblTiposMouseClicked(evt);
+            }
+        });
+
         scrTipos.setViewportView(tblTipos);
         if (tblTipos.getColumnModel().getColumnCount() > 0) {
             tblTipos.getColumnModel().getColumn(2).setResizable(false);
@@ -184,15 +263,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnLimpiarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarTipo.setText("Limpiar");
+        btnLimpiarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarTipoActionPerformed(evt);
+        });
 
         btnEliminarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarTipo.setText("Eliminar");
+        btnEliminarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarTipoActionPerformed(evt);
+        });
 
         btnActualizarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarTipo.setText("Actualizar");
+        btnActualizarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarTipoActionPerformed(evt);
+        });
 
         btnGuardarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarTipo.setText("Guardar");
+        btnGuardarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarTipoActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlTiposLayout = new javax.swing.GroupLayout(pnlTipos);
         pnlTipos.setLayout(pnlTiposLayout);
@@ -247,15 +338,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblUsuarios.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "Código", "Nombre ", "Tipo", "Activo"
             }
         ));
+        tblUsuarios.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblUsuariosMouseClicked(evt);
+            }
+        });
+
         scrUsuarios.setViewportView(tblUsuarios);
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -263,6 +357,12 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel4.setText("Código:");
+
+        txtCedulaUsu.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtCedulaUsuKeyReleased(evt);
+            }
+        });
 
         txtCodigoUsu.setEditable(false);
 
@@ -272,9 +372,14 @@ public class FrmAdmin extends javax.swing.JFrame {
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel6.setText("Contraseña:");
 
-        pwdContrasenaUsu.setText("jPasswordField1");
 
         cmbTipoUsu.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        cmbTipoUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+
+            cmbTipoUsuActionPerformed(evt);
+
+        });
 
         jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel7.setText("Tipo:");
@@ -285,18 +390,33 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGuardarUsu.setText("Guardar");
+        btnGuardarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarUsuActionPerformed(evt);
+        });
 
         btnActualizarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnActualizarUsu.setText("Actualizar");
+        btnActualizarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarUsuActionPerformed(evt);
+        });
 
         btnContrasenaUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnContrasenaUsu.setText("Contraseña");
+        btnContrasenaUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnContrasenaUsuActionPerformed(evt);
+        });
 
         btnEliminarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnEliminarUsu.setText("Eliminar");
+        btnEliminarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarUsuActionPerformed(evt);
+        });
 
         btnLimpiarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnLimpiarUsu.setText("Limpiar");
+        btnLimpiarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarUsuActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlUsuariosLayout = new javax.swing.GroupLayout(pnlUsuarios);
         pnlUsuarios.setLayout(pnlUsuariosLayout);
@@ -395,15 +515,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblSecciones.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "ID", "Nombre"
             }
         ));
+        tblSecciones.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblSeccionesMouseClicked(evt);
+            }
+        });
+
         scrSecciones.setViewportView(tblSecciones);
 
         jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -411,15 +534,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarSec.setText("Guardar");
+        btnGuardarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarSecActionPerformed(evt);
+        });
 
         btnActualizarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarSec.setText("Actualizar");
+        btnActualizarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarSecActionPerformed(evt);
+        });
 
         btnEliminarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarSec.setText("Eliminar");
+        btnEliminarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarSecActionPerformed(evt);
+        });
 
         btnLimpiarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarSec.setText("Limpiar");
+        btnLimpiarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarSecActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlSeccionesLayout = new javax.swing.GroupLayout(pnlSecciones);
         pnlSecciones.setLayout(pnlSeccionesLayout);
@@ -469,18 +604,21 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblMesas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "ID", "Número", "Sección", "Disponible "
             }
         ));
+        tblMesas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblMesasMouseClicked(evt);
+            }
+        });
+
         scrMesas.setViewportView(tblMesas);
 
-        spnNumeroMesa.setModel(new javax.swing.SpinnerNumberModel(1, 1, 18, 1));
+        spnNumeroMesa.setModel(new javax.swing.SpinnerNumberModel(1, 1, 99, 1));
 
         cmbSeccionMesa.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sección A", "Sección B", "Sección C" }));
 
@@ -490,15 +628,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarMesa.setText("Guardar");
+        btnGuardarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarMesaActionPerformed(evt);
+        });
 
         btnActualizarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarMesa.setText("Actualizar");
+        btnActualizarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarMesaActionPerformed(evt);
+        });
 
         btnEliminarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarMesa.setText("Eliminar");
+        btnEliminarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarMesaActionPerformed(evt);
+        });
 
         btnLimpiarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarMesa.setText("Limpiar");
+        btnLimpiarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarMesaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlMesasLayout = new javax.swing.GroupLayout(pnlMesas);
         pnlMesas.setLayout(pnlMesasLayout);
@@ -554,15 +704,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblComidas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "ID", "Nombre ", "Categoría", "Precio", "Activo"
             }
         ));
+        tblComidas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblComidasMouseClicked(evt);
+            }
+        });
+
         scrComidas.setViewportView(tblComidas);
 
         jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -584,15 +737,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarComida.setText("Guardar");
+        btnGuardarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarComidaActionPerformed(evt);
+        });
 
         btnActualizarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarComida.setText("Actualizar");
+        btnActualizarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarComidaActionPerformed(evt);
+        });
 
         btnEliminarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarComida.setText("Eliminar");
+        btnEliminarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarComidaActionPerformed(evt);
+        });
 
         btnLimpiarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarComida.setText("Limpiar");
+        btnLimpiarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarComidaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlComidasLayout = new javax.swing.GroupLayout(pnlComidas);
         pnlComidas.setLayout(pnlComidasLayout);
@@ -671,15 +836,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblBebidas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "ID", "Nombre", "Categoría ", "Precio", "Activo "
             }
         ));
+        tblBebidas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblBebidasMouseClicked(evt);
+            }
+        });
+
         scrBebidas.setViewportView(tblBebidas);
 
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -701,15 +869,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGuardarBebida.setText("Guardar");
+        btnGuardarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarBebidaActionPerformed(evt);
+        });
 
         btnActualizarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnActualizarBebida.setText("Actualizar");
+        btnActualizarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarBebidaActionPerformed(evt);
+        });
 
         btnEliminarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnEliminarBebida.setText("Eliminar");
+        btnEliminarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarBebidaActionPerformed(evt);
+        });
 
         btnLimpiarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnLimpiarBebida.setText("Limpiar");
+        btnLimpiarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarBebidaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlBebidasLayout = new javax.swing.GroupLayout(pnlBebidas);
         pnlBebidas.setLayout(pnlBebidasLayout);
@@ -784,15 +964,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblCatComida.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "ID", "Nombre"
             }
         ));
+        tblCatComida.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblCatComidaMouseClicked(evt);
+            }
+        });
+
         scrCatComida.setViewportView(tblCatComida);
 
         jLabel17.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -800,29 +983,44 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarCatComida.setText("Guardar");
+        btnGuardarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarCatComidaActionPerformed(evt);
+        });
 
         btnActualizarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarCatComida.setText("Actualizar");
+        btnActualizarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarCatComidaActionPerformed(evt);
+        });
 
         btnEliminarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarCatComida.setText("Eliminar");
+        btnEliminarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarCatComidaActionPerformed(evt);
+        });
 
         btnLimpiarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarCatComida.setText("Limpiar");
+        btnLimpiarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarCatComidaActionPerformed(evt);
+        });
 
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
         tblCatBebida.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "ID", "Nombre"
             }
         ));
+        tblCatBebida.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblCatBebidaMouseClicked(evt);
+            }
+        });
+
         scrCatBebida.setViewportView(tblCatBebida);
 
         jLabel18.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -830,15 +1028,27 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarCatBebida.setText("Guardar");
+        btnGuardarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarCatBebidaActionPerformed(evt);
+        });
 
         btnActualizarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarCatBebida.setText("Actualizar");
+        btnActualizarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnActualizarCatBebidaActionPerformed(evt);
+        });
 
         btnEliminarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarCatBebida.setText("Eliminar");
+        btnEliminarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarCatBebidaActionPerformed(evt);
+        });
 
         btnLimpiarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarCatBebida.setText("Limpiar");
+        btnLimpiarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarCatBebidaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlCategoriasLayout = new javax.swing.GroupLayout(pnlCategorias);
         pnlCategorias.setLayout(pnlCategoriasLayout);
@@ -914,15 +1124,18 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         tblRotacion.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "ID", "Salonero", "Sección", "Fecha"
             }
         ));
+        tblRotacion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblRotacionMouseClicked(evt);
+            }
+        });
+
         scrRotacion.setViewportView(tblRotacion);
 
         cmbSaloneroRot.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ana Solís (SAL001)", "Luis Mora (SAL002)", "Carmen Vega (SAL003)" }));
@@ -940,12 +1153,21 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarRot.setText("Guardar");
+        btnGuardarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarRotActionPerformed(evt);
+        });
 
         btnEliminarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarRot.setText("Eliminar");
+        btnEliminarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnEliminarRotActionPerformed(evt);
+        });
 
         btnLimpiarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarRot.setText("Limpiar");
+        btnLimpiarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarRotActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlRotacionLayout = new javax.swing.GroupLayout(pnlRotacion);
         pnlRotacion.setLayout(pnlRotacionLayout);
@@ -1015,6 +1237,9 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGenerarReporte.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGenerarReporte.setText("Generar Reporte ");
+        btnGenerarReporte.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGenerarReporteActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlGraficoLayout = new javax.swing.GroupLayout(pnlGrafico);
         pnlGrafico.setLayout(pnlGraficoLayout);
@@ -1084,6 +1309,1173 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionActionPerformed
+        SesionActual.cerrarSesion();
+        new FrmLogin().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarSesionActionPerformed
+
+    // ================= CATEGORIAS DE COMIDA =================
+
+    private void tblCatComidaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCatComidaMouseClicked
+        int fila = tblCatComida.getSelectedRow();
+        if (fila >= 0) {
+            txtNombreCatComida.setText(catComidas.get(fila).getNombre());
+        }
+    }//GEN-LAST:event_tblCatComidaMouseClicked
+
+    private void btnGuardarCatComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarCatComidaActionPerformed
+        String nombre = txtNombreCatComida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la categoría.");
+            return;
+        }
+        CategoriaComida cat = new CategoriaComida();
+        cat.setNombre(nombre);
+        if (catComidaDAO.insert(cat)) {
+            aviso("Categoría guardada.");
+            btnLimpiarCatComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo guardar la categoría.");
+        }
+    }//GEN-LAST:event_btnGuardarCatComidaActionPerformed
+
+    private void btnActualizarCatComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarCatComidaActionPerformed
+        int fila = tblCatComida.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una categoría de la tabla.");
+            return;
+        }
+        String nombre = txtNombreCatComida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la categoría.");
+            return;
+        }
+        CategoriaComida cat = catComidas.get(fila);
+        cat.setNombre(nombre);
+        if (catComidaDAO.update(cat)) {
+            aviso("Categoría actualizada.");
+            btnLimpiarCatComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo actualizar la categoría.");
+        }
+    }//GEN-LAST:event_btnActualizarCatComidaActionPerformed
+
+    private void btnEliminarCatComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarCatComidaActionPerformed
+        int fila = tblCatComida.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una categoría de la tabla.");
+            return;
+        }
+        CategoriaComida cat = catComidas.get(fila);
+        if (!confirmar("¿Eliminar la categoría " + cat.getNombre() + "?")) {
+            return;
+        }
+        if (catComidaDAO.delete(cat.getId_categoria())) {
+            aviso("Categoría eliminada.");
+            btnLimpiarCatComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo eliminar.\nSeguro tiene platos usando esa categoría.");
+        }
+    }//GEN-LAST:event_btnEliminarCatComidaActionPerformed
+
+    private void btnLimpiarCatComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarCatComidaActionPerformed
+        txtNombreCatComida.setText("");
+        tblCatComida.clearSelection();
+    }//GEN-LAST:event_btnLimpiarCatComidaActionPerformed
+
+    // ================= CATEGORIAS DE BEBIDA =================
+
+    private void tblCatBebidaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCatBebidaMouseClicked
+        int fila = tblCatBebida.getSelectedRow();
+        if (fila >= 0) {
+            txtNombreCatBebida.setText(catBebidas.get(fila).getNombre());
+        }
+    }//GEN-LAST:event_tblCatBebidaMouseClicked
+
+    private void btnGuardarCatBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarCatBebidaActionPerformed
+        String nombre = txtNombreCatBebida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la categoría.");
+            return;
+        }
+        CategoriaBebida cat = new CategoriaBebida();
+        cat.setNombre(nombre);
+        if (catBebidaDAO.insert(cat)) {
+            aviso("Categoría guardada.");
+            btnLimpiarCatBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo guardar la categoría.");
+        }
+    }//GEN-LAST:event_btnGuardarCatBebidaActionPerformed
+
+    private void btnActualizarCatBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarCatBebidaActionPerformed
+        int fila = tblCatBebida.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una categoría de la tabla.");
+            return;
+        }
+        String nombre = txtNombreCatBebida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la categoría.");
+            return;
+        }
+        CategoriaBebida cat = catBebidas.get(fila);
+        cat.setNombre(nombre);
+        if (catBebidaDAO.update(cat)) {
+            aviso("Categoría actualizada.");
+            btnLimpiarCatBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo actualizar la categoría.");
+        }
+    }//GEN-LAST:event_btnActualizarCatBebidaActionPerformed
+
+    private void btnEliminarCatBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarCatBebidaActionPerformed
+        int fila = tblCatBebida.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una categoría de la tabla.");
+            return;
+        }
+        CategoriaBebida cat = catBebidas.get(fila);
+        if (!confirmar("¿Eliminar la categoría " + cat.getNombre() + "?")) {
+            return;
+        }
+        if (catBebidaDAO.delete(cat.getId_categoria())) {
+            aviso("Categoría eliminada.");
+            btnLimpiarCatBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo eliminar.\nSeguro tiene bebidas usando esa categoría.");
+        }
+    }//GEN-LAST:event_btnEliminarCatBebidaActionPerformed
+
+    private void btnLimpiarCatBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarCatBebidaActionPerformed
+        txtNombreCatBebida.setText("");
+        tblCatBebida.clearSelection();
+    }//GEN-LAST:event_btnLimpiarCatBebidaActionPerformed
+
+    // ================= COMIDAS =================
+
+    private void tblComidasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblComidasMouseClicked
+        int fila = tblComidas.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Comida c = comidas.get(fila);
+        txtNombreComida.setText(c.getNombre());
+        txtDescripcionComida.setText(c.getDescripcion());
+        txtPrecioComida.setText(c.getPrecio() != null ? c.getPrecio().toString() : "");
+        chkActivoComida.setSelected(c.getActivo() == 1);
+        // dejo seleccionada la categoria que le corresponde
+        for (int i = 0; i < catComidas.size(); i++) {
+            if (catComidas.get(i).getId_categoria() == c.getId_categoria()) {
+                cmbCategoriaComida.setSelectedIndex(i);
+            }
+        }
+    }//GEN-LAST:event_tblComidasMouseClicked
+
+    private void btnGuardarComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarComidaActionPerformed
+        Comida c = leerFormularioComida(new Comida());
+        if (c == null) {
+            return;
+        }
+        if (comidaDAO.insert(c)) {
+            aviso("Plato guardado.");
+            btnLimpiarComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo guardar el plato.");
+        }
+    }//GEN-LAST:event_btnGuardarComidaActionPerformed
+
+    private void btnActualizarComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarComidaActionPerformed
+        int fila = tblComidas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un plato de la tabla.");
+            return;
+        }
+        Comida c = leerFormularioComida(comidas.get(fila));
+        if (c == null) {
+            return;
+        }
+        if (comidaDAO.update(c)) {
+            aviso("Plato actualizado.");
+            btnLimpiarComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo actualizar el plato.");
+        }
+    }//GEN-LAST:event_btnActualizarComidaActionPerformed
+
+    private void btnEliminarComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarComidaActionPerformed
+        int fila = tblComidas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un plato de la tabla.");
+            return;
+        }
+        Comida c = comidas.get(fila);
+        if (!confirmar("¿Eliminar el plato " + c.getNombre() + "?")) {
+            return;
+        }
+        if (comidaDAO.delete(c.getId_comida())) {
+            aviso("Plato eliminado.");
+            btnLimpiarComidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo eliminar.\nSeguro ya salió en alguna comanda; mejor desmárquelo como activo.");
+        }
+    }//GEN-LAST:event_btnEliminarComidaActionPerformed
+
+    private void btnLimpiarComidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarComidaActionPerformed
+        txtNombreComida.setText("");
+        txtDescripcionComida.setText("");
+        txtPrecioComida.setText("");
+        chkActivoComida.setSelected(true);
+        tblComidas.clearSelection();
+    }//GEN-LAST:event_btnLimpiarComidaActionPerformed
+
+    // ================= BEBIDAS =================
+
+    private void tblBebidasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblBebidasMouseClicked
+        int fila = tblBebidas.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Bebida b = bebidas.get(fila);
+        txtNombreBebida.setText(b.getNombre());
+        txtDescripcionBebida.setText(b.getDescripcion());
+        txtPrecioBebida.setText(b.getPrecio() != null ? b.getPrecio().toString() : "");
+        chkActivoBebida.setSelected(b.getActivo() == 1);
+        for (int i = 0; i < catBebidas.size(); i++) {
+            if (catBebidas.get(i).getId_categoria() == b.getId_categoria()) {
+                cmbCategoriaBebida.setSelectedIndex(i);
+            }
+        }
+    }//GEN-LAST:event_tblBebidasMouseClicked
+
+    private void btnGuardarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarBebidaActionPerformed
+        Bebida b = leerFormularioBebida(new Bebida());
+        if (b == null) {
+            return;
+        }
+        if (bebidaDAO.insert(b)) {
+            aviso("Bebida guardada.");
+            btnLimpiarBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo guardar la bebida.");
+        }
+    }//GEN-LAST:event_btnGuardarBebidaActionPerformed
+
+    private void btnActualizarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarBebidaActionPerformed
+        int fila = tblBebidas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una bebida de la tabla.");
+            return;
+        }
+        Bebida b = leerFormularioBebida(bebidas.get(fila));
+        if (b == null) {
+            return;
+        }
+        if (bebidaDAO.update(b)) {
+            aviso("Bebida actualizada.");
+            btnLimpiarBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo actualizar la bebida.");
+        }
+    }//GEN-LAST:event_btnActualizarBebidaActionPerformed
+
+    private void btnEliminarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarBebidaActionPerformed
+        int fila = tblBebidas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una bebida de la tabla.");
+            return;
+        }
+        Bebida b = bebidas.get(fila);
+        if (!confirmar("¿Eliminar la bebida " + b.getNombre() + "?")) {
+            return;
+        }
+        if (bebidaDAO.delete(b.getId_bebida())) {
+            aviso("Bebida eliminada.");
+            btnLimpiarBebidaActionPerformed(evt);
+            cargarCatalogos();
+        } else {
+            error("No se pudo eliminar.\nSeguro ya salió en alguna comanda; mejor desmárquela como activa.");
+        }
+    }//GEN-LAST:event_btnEliminarBebidaActionPerformed
+
+    private void btnLimpiarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarBebidaActionPerformed
+        txtNombreBebida.setText("");
+        txtDescripcionBebida.setText("");
+        txtPrecioBebida.setText("");
+        chkActivoBebida.setSelected(true);
+        tblBebidas.clearSelection();
+    }//GEN-LAST:event_btnLimpiarBebidaActionPerformed
+
+    // ================= TIPOS DE USUARIO =================
+
+    private void tblTiposMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTiposMouseClicked
+        int fila = tblTipos.getSelectedRow();
+        if (fila >= 0) {
+            txtNombreTipo.setText(tipos.get(fila).getNombre());
+            txtPrefijoTipo.setText(tipos.get(fila).getPrefijo());
+        }
+    }//GEN-LAST:event_tblTiposMouseClicked
+
+    private void btnGuardarTipoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarTipoActionPerformed
+        TipoUsuario tipo = leerFormularioTipo(new TipoUsuario(), 0);
+        if (tipo == null) {
+            return;
+        }
+        if (tipoDAO.insert(tipo)) {
+            aviso("Tipo de usuario guardado.");
+            btnLimpiarTipoActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo guardar el tipo de usuario.");
+        }
+    }//GEN-LAST:event_btnGuardarTipoActionPerformed
+
+    private void btnActualizarTipoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarTipoActionPerformed
+        int fila = tblTipos.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un tipo de la tabla.");
+            return;
+        }
+        TipoUsuario tipo = tipos.get(fila);
+        if (leerFormularioTipo(tipo, tipo.getId_tipo()) == null) {
+            return;
+        }
+        if (tipoDAO.update(tipo)) {
+            aviso("Tipo de usuario actualizado.");
+            btnLimpiarTipoActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo actualizar el tipo de usuario.");
+        }
+    }//GEN-LAST:event_btnActualizarTipoActionPerformed
+
+    private void btnEliminarTipoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarTipoActionPerformed
+        int fila = tblTipos.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un tipo de la tabla.");
+            return;
+        }
+        TipoUsuario tipo = tipos.get(fila);
+
+        // no lo dejo borrar si hay empleados de ese tipo
+        int cuantos = 0;
+        for (Usuario u : usuarios) {
+            if (u.getId_tipo() == tipo.getId_tipo()) {
+                cuantos++;
+            }
+        }
+        if (cuantos > 0) {
+            aviso("Hay " + cuantos + " empleado(s) de ese tipo.\nPrimero cámbielos de tipo o elimínelos.");
+            return;
+        }
+
+        if (!confirmar("¿Eliminar el tipo " + tipo.getNombre() + "?")) {
+            return;
+        }
+        if (tipoDAO.delete(tipo.getId_tipo())) {
+            aviso("Tipo eliminado.");
+            btnLimpiarTipoActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo eliminar el tipo.");
+        }
+    }//GEN-LAST:event_btnEliminarTipoActionPerformed
+
+    private void btnLimpiarTipoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarTipoActionPerformed
+        txtNombreTipo.setText("");
+        txtPrefijoTipo.setText("");
+        tblTipos.clearSelection();
+    }//GEN-LAST:event_btnLimpiarTipoActionPerformed
+
+    // ================= USUARIOS (EMPLEADOS) =================
+
+    private void tblUsuariosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblUsuariosMouseClicked
+        int fila = tblUsuarios.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Usuario u = usuarios.get(fila);
+        txtCodigoUsu.setText(u.getCodigo());
+        txtNombreUsu.setText(u.getNombre());
+        chkActivoUsu.setSelected(u.getActivo() == 1);
+        pwdContrasenaUsu.setText("");
+        // el codigo ya existe, saco de ahi los 3 numeros de la cedula
+        txtCedulaUsu.setText(u.getCodigo().length() > 3 ? u.getCodigo().substring(3) : "");
+        for (int i = 0; i < tipos.size(); i++) {
+            if (tipos.get(i).getId_tipo() == u.getId_tipo()) {
+                cmbTipoUsu.setSelectedIndex(i);
+            }
+        }
+    }//GEN-LAST:event_tblUsuariosMouseClicked
+
+    private void txtCedulaUsuKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtCedulaUsuKeyReleased
+        armarCodigo();
+    }//GEN-LAST:event_txtCedulaUsuKeyReleased
+
+    private void cmbTipoUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbTipoUsuActionPerformed
+        armarCodigo();
+    }//GEN-LAST:event_cmbTipoUsuActionPerformed
+
+    private void btnGuardarUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarUsuActionPerformed
+        armarCodigo();
+        String codigo = txtCodigoUsu.getText().trim();
+        if (codigo.isEmpty()) {
+            aviso("Escriba la cédula y escoja el tipo para armar el código.");
+            return;
+        }
+        if (txtNombreUsu.getText().trim().isEmpty()) {
+            aviso("Escriba el nombre del empleado.");
+            return;
+        }
+        String contrasena = new String(pwdContrasenaUsu.getPassword());
+        if (contrasena.isEmpty()) {
+            aviso("Escriba la contraseña del empleado.");
+            return;
+        }
+        for (Usuario u : usuarios) {
+            if (u.getCodigo().equals(codigo)) {
+                aviso("Ya existe el empleado " + codigo + ".");
+                return;
+            }
+        }
+
+        Usuario u = new Usuario();
+        u.setCodigo(codigo);
+        u.setNombre(txtNombreUsu.getText().trim());
+        u.setContrasena(contrasena); // el DAO le mete el MD5
+        u.setId_tipo(tipos.get(cmbTipoUsu.getSelectedIndex()).getId_tipo());
+        u.setActivo(chkActivoUsu.isSelected() ? 1 : 0);
+
+        if (usuarioDAO.insert(u)) {
+            aviso("Empleado " + codigo + " guardado.");
+            btnLimpiarUsuActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo guardar el empleado.");
+        }
+    }//GEN-LAST:event_btnGuardarUsuActionPerformed
+
+    private void btnActualizarUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarUsuActionPerformed
+        int fila = tblUsuarios.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un empleado de la tabla.");
+            return;
+        }
+        if (txtNombreUsu.getText().trim().isEmpty()) {
+            aviso("Escriba el nombre del empleado.");
+            return;
+        }
+        // el codigo no se cambia, es la llave de la tabla
+        Usuario u = usuarios.get(fila);
+        u.setNombre(txtNombreUsu.getText().trim());
+        u.setId_tipo(tipos.get(cmbTipoUsu.getSelectedIndex()).getId_tipo());
+        u.setActivo(chkActivoUsu.isSelected() ? 1 : 0);
+
+        if (usuarioDAO.update(u)) {
+            aviso("Empleado actualizado.");
+            btnLimpiarUsuActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo actualizar el empleado.");
+        }
+    }//GEN-LAST:event_btnActualizarUsuActionPerformed
+
+    private void btnContrasenaUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnContrasenaUsuActionPerformed
+        int fila = tblUsuarios.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un empleado de la tabla.");
+            return;
+        }
+        String nueva = new String(pwdContrasenaUsu.getPassword());
+        if (nueva.isEmpty()) {
+            aviso("Escriba la contraseña nueva.");
+            return;
+        }
+        Usuario u = usuarios.get(fila);
+        if (usuarioDAO.updateContrasena(u.getCodigo(), nueva)) {
+            aviso("Contraseña cambiada al empleado " + u.getCodigo() + ".");
+            pwdContrasenaUsu.setText("");
+        } else {
+            error("No se pudo cambiar la contraseña.");
+        }
+    }//GEN-LAST:event_btnContrasenaUsuActionPerformed
+
+    private void btnEliminarUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarUsuActionPerformed
+        int fila = tblUsuarios.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione un empleado de la tabla.");
+            return;
+        }
+        Usuario u = usuarios.get(fila);
+        if (!confirmar("¿Eliminar al empleado " + u.getNombre() + " (" + u.getCodigo() + ")?")) {
+            return;
+        }
+        if (usuarioDAO.delete(u.getCodigo())) {
+            aviso("Empleado eliminado.");
+            btnLimpiarUsuActionPerformed(evt);
+            cargarPersonal();
+        } else {
+            error("No se pudo eliminar.\nEse empleado ya tiene comandas o rotaciones;\nmejor desmárquelo como activo.");
+        }
+    }//GEN-LAST:event_btnEliminarUsuActionPerformed
+
+    private void btnLimpiarUsuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarUsuActionPerformed
+        txtCedulaUsu.setText("");
+        txtCodigoUsu.setText("");
+        txtNombreUsu.setText("");
+        pwdContrasenaUsu.setText("");
+        chkActivoUsu.setSelected(true);
+        tblUsuarios.clearSelection();
+    }//GEN-LAST:event_btnLimpiarUsuActionPerformed
+
+    // ================= ROTACION DE SECCIONES =================
+
+    private void tblRotacionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblRotacionMouseClicked
+        int fila = tblRotacion.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        AsignacionSeccion asig = rotaciones.get(fila);
+        txtFechaRot.setText(asig.getFecha().toString());
+        for (int i = 0; i < saloneros.size(); i++) {
+            if (saloneros.get(i).getCodigo().equals(asig.getCodigoSal())) {
+                cmbSaloneroRot.setSelectedIndex(i);
+            }
+        }
+        for (int i = 0; i < secciones.size(); i++) {
+            if (secciones.get(i).getId_seccion() == asig.getIdSeccion()) {
+                cmbSeccionRot.setSelectedIndex(i);
+            }
+        }
+    }//GEN-LAST:event_tblRotacionMouseClicked
+
+    private void btnGuardarRotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarRotActionPerformed
+        LocalDate fecha = leerFecha(txtFechaRot.getText());
+        if (fecha == null) {
+            aviso("La fecha debe ser aaaa-mm-dd (ejemplo " + LocalDate.now() + ").");
+            return;
+        }
+        if (saloneros.isEmpty() || secciones.isEmpty()) {
+            aviso("Necesita saloneros activos y secciones creadas.");
+            return;
+        }
+
+        // si ese dia todavia no tiene rotacion, ofrezco armarla completa
+        if (asignacionDAO.findByFecha(fecha).isEmpty()) {
+            int r = JOptionPane.showConfirmDialog(this,
+                    "Ese día no tiene rotación.\n¿Generarla automáticamente para todos los saloneros?\n"
+                    + "(Si dice que No, se guarda solo el salonero escogido.)",
+                    "Rotación del día", JOptionPane.YES_NO_CANCEL_OPTION);
+            if (r == JOptionPane.CANCEL_OPTION) {
+                return;
+            }
+            if (r == JOptionPane.YES_OPTION) {
+                int cuantas = asignacionDAO.generarRotacionDiaria(fecha).size();
+                aviso("Rotación generada: " + cuantas + " salonero(s) asignados.");
+                cargarRotaciones();
+                return;
+            }
+        }
+
+        AsignacionSeccion asig = new AsignacionSeccion();
+        asig.setCodigoSal(saloneros.get(cmbSaloneroRot.getSelectedIndex()).getCodigo());
+        asig.setIdSeccion(secciones.get(cmbSeccionRot.getSelectedIndex()).getId_seccion());
+        asig.setFecha(fecha);
+
+        if (asignacionDAO.insert(asig)) {
+            aviso("Asignación guardada.");
+            cargarRotaciones();
+        } else {
+            error("No se pudo guardar.\nEse salonero ya tiene sección ese día,\no esa sección ya está ocupada por otro.");
+        }
+    }//GEN-LAST:event_btnGuardarRotActionPerformed
+
+    private void btnEliminarRotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarRotActionPerformed
+        int fila = tblRotacion.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una asignación de la tabla.");
+            return;
+        }
+        AsignacionSeccion asig = rotaciones.get(fila);
+        if (!confirmar("¿Quitar la asignación de " + asig.getCodigoSal() + " del " + asig.getFecha() + "?")) {
+            return;
+        }
+        if (asignacionDAO.delete(asig.getIdAsignacion())) {
+            aviso("Asignación eliminada.");
+            btnLimpiarRotActionPerformed(evt);
+            cargarRotaciones();
+        } else {
+            error("No se pudo eliminar la asignación.");
+        }
+    }//GEN-LAST:event_btnEliminarRotActionPerformed
+
+    private void btnLimpiarRotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarRotActionPerformed
+        txtFechaRot.setText(LocalDate.now().toString());
+        tblRotacion.clearSelection();
+    }//GEN-LAST:event_btnLimpiarRotActionPerformed
+
+    // ================= REPORTES =================
+
+    private void btnGenerarReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarReporteActionPerformed
+        generarReporte();
+    }//GEN-LAST:event_btnGenerarReporteActionPerformed
+
+    /** Arma el grafico de barras del reporte que escogieron en el combo. */
+    private void generarReporte() {
+        int cual = cmbTipoReporte.getSelectedIndex();
+        String titulo = String.valueOf(cmbTipoReporte.getSelectedItem());
+
+        java.util.Map<String, Integer> datos;
+        try {
+            switch (cual) {
+                case 0 -> datos = reporteDAO.personasAtendidaXDiaSalon();
+                case 1 -> datos = reporteDAO.personasAtendidaXDiaBar();
+                case 2 -> datos = reporteDAO.comandasRealizadasBar();
+                case 3 -> datos = reporteDAO.comandasAtendidasBar();
+                default -> datos = reporteDAO.comandasCocinaDesglosadas();
+            }
+        } catch (Exception e) {
+            error("No se pudo sacar el reporte: " + e.getMessage());
+            return;
+        }
+
+        if (datos.isEmpty()) {
+            aviso("Ese reporte no tiene datos todavía.");
+            pnlGrafico.removeAll();
+            pnlGrafico.revalidate();
+            pnlGrafico.repaint();
+            return;
+        }
+
+        org.jfree.data.category.DefaultCategoryDataset tabla = new org.jfree.data.category.DefaultCategoryDataset();
+        for (java.util.Map.Entry<String, Integer> fila : datos.entrySet()) {
+            tabla.addValue(fila.getValue(), titulo, fila.getKey());
+        }
+
+        JFreeChart grafico = ChartFactory.createBarChart(titulo, "", "Cantidad", tabla);
+        ChartPanel panel = new ChartPanel(grafico);
+        panel.setPreferredSize(pnlGrafico.getSize());
+
+        pnlGrafico.removeAll();
+        pnlGrafico.setLayout(new java.awt.BorderLayout());
+        pnlGrafico.add(panel, java.awt.BorderLayout.CENTER);
+        pnlGrafico.revalidate();
+        pnlGrafico.repaint();
+    }
+
+    // ================= carga del personal y la rotacion =================
+
+    /** Vuelve a leer los tipos de usuario y los empleados. */
+    private void cargarPersonal() {
+        tipos = tipoDAO.findAll();
+        usuarios = usuarioDAO.findAll();
+
+        DefaultTableModel mTipos = (DefaultTableModel) tblTipos.getModel();
+        mTipos.setRowCount(0);
+        cargandoCombos = true;
+        cmbTipoUsu.removeAllItems();
+        for (TipoUsuario t : tipos) {
+            mTipos.addRow(new Object[]{t.getId_tipo(), t.getNombre(), t.getPrefijo()});
+            cmbTipoUsu.addItem(t.getNombre());
+        }
+        cargandoCombos = false;
+
+        DefaultTableModel mUsu = (DefaultTableModel) tblUsuarios.getModel();
+        mUsu.setRowCount(0);
+        for (Usuario u : usuarios) {
+            mUsu.addRow(new Object[]{u.getCodigo(), u.getNombre(),
+                nombreTipo(u.getId_tipo()), u.getActivo() == 1 ? "Sí" : "No"});
+        }
+
+        cargarRotaciones();
+    }
+
+    /** Llena la tabla de rotaciones y los combos de esa pestaña. */
+    private void cargarRotaciones() {
+        rotaciones = asignacionDAO.findAll();
+
+        // solo los saloneros activos pueden tener seccion
+        saloneros = new ArrayList<>();
+        for (Usuario u : usuarios) {
+            if (u.getActivo() == 1 && "SAL".equals(prefijoTipo(u.getId_tipo()))) {
+                saloneros.add(u);
+            }
+        }
+
+        cargandoCombos = true;
+        cmbSaloneroRot.removeAllItems();
+        for (Usuario u : saloneros) {
+            cmbSaloneroRot.addItem(u.getNombre() + " (" + u.getCodigo() + ")");
+        }
+        cmbSeccionRot.removeAllItems();
+        for (SeccionSalon sec : secciones) {
+            cmbSeccionRot.addItem(sec.getNombre());
+        }
+        cargandoCombos = false;
+
+        DefaultTableModel mRot = (DefaultTableModel) tblRotacion.getModel();
+        mRot.setRowCount(0);
+        for (AsignacionSeccion asig : rotaciones) {
+            mRot.addRow(new Object[]{asig.getIdAsignacion(), nombreSalonero(asig.getCodigoSal()),
+                nombreSeccion(asig.getIdSeccion()), asig.getFecha()});
+        }
+    }
+
+    /** Arma el codigo del empleado: prefijo del tipo + los ultimos 3 numeros de la cedula. */
+    private void armarCodigo() {
+        if (cargandoCombos || cmbTipoUsu.getSelectedIndex() < 0) {
+            return;
+        }
+        // me quedo solo con los numeros de la cedula
+        String soloNumeros = "";
+        for (char c : txtCedulaUsu.getText().toCharArray()) {
+            if (Character.isDigit(c)) {
+                soloNumeros = soloNumeros + c;
+            }
+        }
+        if (soloNumeros.length() < 3) {
+            txtCodigoUsu.setText("");
+            return;
+        }
+        String ultimos3 = soloNumeros.substring(soloNumeros.length() - 3);
+        txtCodigoUsu.setText(tipos.get(cmbTipoUsu.getSelectedIndex()).getPrefijo() + ultimos3);
+    }
+
+    /** Toma lo que hay en el formulario de tipos y lo valida. */
+    private TipoUsuario leerFormularioTipo(TipoUsuario tipo, int idQueIgnoro) {
+        String nombre = txtNombreTipo.getText().trim();
+        String prefijo = txtPrefijoTipo.getText().trim().toUpperCase();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre del tipo.");
+            return null;
+        }
+        if (prefijo.length() != 3) {
+            aviso("El prefijo debe tener exactamente 3 letras (ejemplo SAL).");
+            return null;
+        }
+        for (TipoUsuario t : tipos) {
+            if (t.getId_tipo() != idQueIgnoro && t.getPrefijo().equalsIgnoreCase(prefijo)) {
+                aviso("Ya hay otro tipo con el prefijo " + prefijo + ".");
+                return null;
+            }
+        }
+        tipo.setNombre(nombre);
+        tipo.setPrefijo(prefijo);
+        return tipo;
+    }
+
+    /** Busca el nombre del tipo para la tabla de empleados. */
+    private String nombreTipo(int idTipo) {
+        for (TipoUsuario t : tipos) {
+            if (t.getId_tipo() == idTipo) {
+                return t.getNombre();
+            }
+        }
+        return "-";
+    }
+
+    /** Busca el prefijo del tipo (SAL, COS, BAR, CAJ). */
+    private String prefijoTipo(int idTipo) {
+        for (TipoUsuario t : tipos) {
+            if (t.getId_tipo() == idTipo) {
+                return t.getPrefijo();
+            }
+        }
+        return "";
+    }
+
+    /** Busca el nombre del salonero para la tabla de rotaciones. */
+    private String nombreSalonero(String codigo) {
+        for (Usuario u : usuarios) {
+            if (u.getCodigo().equals(codigo)) {
+                return u.getNombre() + " (" + codigo + ")";
+            }
+        }
+        return codigo;
+    }
+
+    /** Convierte el texto a fecha, devuelve null si esta mal escrita. */
+    private LocalDate leerFecha(String texto) {
+        try {
+            return LocalDate.parse(texto.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // ================= SECCIONES DEL SALON =================
+
+    private void tblSeccionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSeccionesMouseClicked
+        int fila = tblSecciones.getSelectedRow();
+        if (fila >= 0) {
+            txtNombreSec.setText(secciones.get(fila).getNombre());
+        }
+    }//GEN-LAST:event_tblSeccionesMouseClicked
+
+    private void btnGuardarSecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarSecActionPerformed
+        String nombre = txtNombreSec.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la sección.");
+            return;
+        }
+        SeccionSalon sec = new SeccionSalon();
+        sec.setNombre(nombre);
+        if (seccionDAO.insert(sec)) {
+            aviso("Sección guardada.");
+            btnLimpiarSecActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo guardar la sección.");
+        }
+    }//GEN-LAST:event_btnGuardarSecActionPerformed
+
+    private void btnActualizarSecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarSecActionPerformed
+        int fila = tblSecciones.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una sección de la tabla.");
+            return;
+        }
+        String nombre = txtNombreSec.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la sección.");
+            return;
+        }
+        SeccionSalon sec = secciones.get(fila);
+        sec.setNombre(nombre);
+        if (seccionDAO.update(sec)) {
+            aviso("Sección actualizada.");
+            btnLimpiarSecActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo actualizar la sección.");
+        }
+    }//GEN-LAST:event_btnActualizarSecActionPerformed
+
+    private void btnEliminarSecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarSecActionPerformed
+        int fila = tblSecciones.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una sección de la tabla.");
+            return;
+        }
+        SeccionSalon sec = secciones.get(fila);
+
+        // no la dejo borrar si todavia tiene mesas
+        int cuantasMesas = 0;
+        for (Mesa m : mesas) {
+            if (m.getId_seccion() == sec.getId_seccion()) {
+                cuantasMesas++;
+            }
+        }
+        if (cuantasMesas > 0) {
+            aviso("Esa sección tiene " + cuantasMesas + " mesa(s).\nPrimero muévalas o elimínelas.");
+            return;
+        }
+
+        if (!confirmar("¿Eliminar la sección " + sec.getNombre() + "?")) {
+            return;
+        }
+        if (seccionDAO.delete(sec.getId_seccion())) {
+            aviso("Sección eliminada.");
+            btnLimpiarSecActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo eliminar.\nSeguro tiene rotaciones de saloneros guardadas.");
+        }
+    }//GEN-LAST:event_btnEliminarSecActionPerformed
+
+    private void btnLimpiarSecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarSecActionPerformed
+        txtNombreSec.setText("");
+        tblSecciones.clearSelection();
+    }//GEN-LAST:event_btnLimpiarSecActionPerformed
+
+    // ================= MESAS =================
+
+    private void tblMesasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMesasMouseClicked
+        int fila = tblMesas.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Mesa m = mesas.get(fila);
+        spnNumeroMesa.setValue(m.getNumero_mesa());
+        chkDisponibleMesa.setSelected(m.getDisponible() == 1);
+        for (int i = 0; i < secciones.size(); i++) {
+            if (secciones.get(i).getId_seccion() == m.getId_seccion()) {
+                cmbSeccionMesa.setSelectedIndex(i);
+            }
+        }
+    }//GEN-LAST:event_tblMesasMouseClicked
+
+    private void btnGuardarMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarMesaActionPerformed
+        int seccion = cmbSeccionMesa.getSelectedIndex();
+        if (seccion < 0) {
+            aviso("Primero cree una sección del salón.");
+            return;
+        }
+        int numero = (Integer) spnNumeroMesa.getValue();
+        if (numeroRepetido(numero, 0)) {
+            aviso("Ya existe la mesa número " + numero + ".");
+            return;
+        }
+        Mesa m = new Mesa();
+        m.setNumero_mesa(numero);
+        m.setId_seccion(secciones.get(seccion).getId_seccion());
+        m.setDisponible(chkDisponibleMesa.isSelected() ? 1 : 0);
+        if (mesaDAO.insert(m)) {
+            aviso("Mesa guardada.");
+            btnLimpiarMesaActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo guardar la mesa.");
+        }
+    }//GEN-LAST:event_btnGuardarMesaActionPerformed
+
+    private void btnActualizarMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarMesaActionPerformed
+        int fila = tblMesas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una mesa de la tabla.");
+            return;
+        }
+        int seccion = cmbSeccionMesa.getSelectedIndex();
+        if (seccion < 0) {
+            aviso("Escoja la sección de la mesa.");
+            return;
+        }
+        Mesa m = mesas.get(fila);
+        int numero = (Integer) spnNumeroMesa.getValue();
+        if (numeroRepetido(numero, m.getId_mesa())) {
+            aviso("Ya existe otra mesa con el número " + numero + ".");
+            return;
+        }
+        m.setNumero_mesa(numero);
+        m.setId_seccion(secciones.get(seccion).getId_seccion());
+        m.setDisponible(chkDisponibleMesa.isSelected() ? 1 : 0);
+        if (mesaDAO.update(m)) {
+            aviso("Mesa actualizada.");
+            btnLimpiarMesaActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo actualizar la mesa.");
+        }
+    }//GEN-LAST:event_btnActualizarMesaActionPerformed
+
+    private void btnEliminarMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarMesaActionPerformed
+        int fila = tblMesas.getSelectedRow();
+        if (fila < 0) {
+            aviso("Seleccione una mesa de la tabla.");
+            return;
+        }
+        Mesa m = mesas.get(fila);
+        if (m.getDisponible() == 0) {
+            aviso("La mesa " + m.getNumero_mesa() + " está ocupada en este momento.");
+            return;
+        }
+        if (!confirmar("¿Eliminar la mesa " + m.getNumero_mesa() + "?")) {
+            return;
+        }
+        if (mesaDAO.delete(m.getId_mesa())) {
+            aviso("Mesa eliminada.");
+            btnLimpiarMesaActionPerformed(evt);
+            cargarSalon();
+        } else {
+            error("No se pudo eliminar.\nEsa mesa ya tiene comandas o reservas guardadas.");
+        }
+    }//GEN-LAST:event_btnEliminarMesaActionPerformed
+
+    private void btnLimpiarMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarMesaActionPerformed
+        spnNumeroMesa.setValue(1);
+        chkDisponibleMesa.setSelected(true);
+        tblMesas.clearSelection();
+    }//GEN-LAST:event_btnLimpiarMesaActionPerformed
+
+    /** Vuelve a leer las secciones y las mesas de la base. */
+    private void cargarSalon() {
+        secciones = seccionDAO.findAll();
+        mesas = mesaDAO.findAll();
+
+        DefaultTableModel mSec = (DefaultTableModel) tblSecciones.getModel();
+        mSec.setRowCount(0);
+        cmbSeccionMesa.removeAllItems();
+        for (SeccionSalon sec : secciones) {
+            mSec.addRow(new Object[]{sec.getId_seccion(), sec.getNombre()});
+            cmbSeccionMesa.addItem(sec.getNombre());
+        }
+
+        DefaultTableModel mMesas = (DefaultTableModel) tblMesas.getModel();
+        mMesas.setRowCount(0);
+        for (Mesa m : mesas) {
+            mMesas.addRow(new Object[]{m.getId_mesa(), m.getNumero_mesa(),
+                nombreSeccion(m.getId_seccion()), m.getDisponible() == 1 ? "Sí" : "Ocupada"});
+        }
+    }
+
+    /** Revisa si ya hay otra mesa con ese numero (idMesa 0 cuando es una mesa nueva). */
+    private boolean numeroRepetido(int numero, int idMesa) {
+        for (Mesa m : mesas) {
+            if (m.getNumero_mesa() == numero && m.getId_mesa() != idMesa) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Busca el nombre de la seccion para mostrarlo en la tabla de mesas. */
+    private String nombreSeccion(int idSeccion) {
+        for (SeccionSalon sec : secciones) {
+            if (sec.getId_seccion() == idSeccion) {
+                return sec.getNombre();
+            }
+        }
+        return "-";
+    }
+
+    // ================= carga de los catalogos =================
+
+    /** Vuelve a leer de la base las categorias, los platos y las bebidas. */
+    private void cargarCatalogos() {
+        catComidas = catComidaDAO.findAll();
+        catBebidas = catBebidaDAO.findAll();
+        comidas = comidaDAO.findAll();
+        bebidas = bebidaDAO.findAll();
+
+        // tabla de categorias de comida
+        DefaultTableModel mCatCom = (DefaultTableModel) tblCatComida.getModel();
+        mCatCom.setRowCount(0);
+        cmbCategoriaComida.removeAllItems();
+        for (CategoriaComida cat : catComidas) {
+            mCatCom.addRow(new Object[]{cat.getId_categoria(), cat.getNombre()});
+            cmbCategoriaComida.addItem(cat.getNombre());
+        }
+
+        // tabla de categorias de bebida
+        DefaultTableModel mCatBeb = (DefaultTableModel) tblCatBebida.getModel();
+        mCatBeb.setRowCount(0);
+        cmbCategoriaBebida.removeAllItems();
+        for (CategoriaBebida cat : catBebidas) {
+            mCatBeb.addRow(new Object[]{cat.getId_categoria(), cat.getNombre()});
+            cmbCategoriaBebida.addItem(cat.getNombre());
+        }
+
+        // tabla de comidas
+        DefaultTableModel mCom = (DefaultTableModel) tblComidas.getModel();
+        mCom.setRowCount(0);
+        for (Comida c : comidas) {
+            mCom.addRow(new Object[]{c.getId_comida(), c.getNombre(),
+                nombreCategoriaComida(c.getId_categoria()), c.getPrecio(), c.getActivo() == 1 ? "Sí" : "No"});
+        }
+
+        // tabla de bebidas
+        DefaultTableModel mBeb = (DefaultTableModel) tblBebidas.getModel();
+        mBeb.setRowCount(0);
+        for (Bebida b : bebidas) {
+            mBeb.addRow(new Object[]{b.getId_bebida(), b.getNombre(),
+                nombreCategoriaBebida(b.getId_categoria()), b.getPrecio(), b.getActivo() == 1 ? "Sí" : "No"});
+        }
+    }
+
+    /** Toma lo que hay en el formulario de comidas y lo mete en el objeto. */
+    private Comida leerFormularioComida(Comida c) {
+        String nombre = txtNombreComida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre del plato.");
+            return null;
+        }
+        BigDecimal precio = leerPrecio(txtPrecioComida.getText());
+        if (precio == null) {
+            aviso("El precio debe ser un número mayor a cero (ejemplo 4500).");
+            return null;
+        }
+        int cat = cmbCategoriaComida.getSelectedIndex();
+        if (cat < 0) {
+            aviso("Primero cree una categoría de comida.");
+            return null;
+        }
+        c.setNombre(nombre);
+        c.setDescripcion(txtDescripcionComida.getText().trim());
+        c.setPrecio(precio);
+        c.setId_categoria(catComidas.get(cat).getId_categoria());
+        c.setActivo(chkActivoComida.isSelected() ? 1 : 0);
+        return c;
+    }
+
+    /** Toma lo que hay en el formulario de bebidas y lo mete en el objeto. */
+    private Bebida leerFormularioBebida(Bebida b) {
+        String nombre = txtNombreBebida.getText().trim();
+        if (nombre.isEmpty()) {
+            aviso("Escriba el nombre de la bebida.");
+            return null;
+        }
+        BigDecimal precio = leerPrecio(txtPrecioBebida.getText());
+        if (precio == null) {
+            aviso("El precio debe ser un número mayor a cero (ejemplo 1500).");
+            return null;
+        }
+        int cat = cmbCategoriaBebida.getSelectedIndex();
+        if (cat < 0) {
+            aviso("Primero cree una categoría de bebida.");
+            return null;
+        }
+        b.setNombre(nombre);
+        b.setDescripcion(txtDescripcionBebida.getText().trim());
+        b.setPrecio(precio);
+        b.setId_categoria(catBebidas.get(cat).getId_categoria());
+        b.setActivo(chkActivoBebida.isSelected() ? 1 : 0);
+        return b;
+    }
+
+    /** Busca el nombre de la categoria para mostrarlo en la tabla. */
+    private String nombreCategoriaComida(int idCategoria) {
+        for (CategoriaComida cat : catComidas) {
+            if (cat.getId_categoria() == idCategoria) {
+                return cat.getNombre();
+            }
+        }
+        return "-";
+    }
+
+    /** Busca el nombre de la categoria para mostrarlo en la tabla. */
+    private String nombreCategoriaBebida(int idCategoria) {
+        for (CategoriaBebida cat : catBebidas) {
+            if (cat.getId_categoria() == idCategoria) {
+                return cat.getNombre();
+            }
+        }
+        return "-";
+    }
+
+    /** Convierte el texto a precio, devuelve null si no sirve. */
+    private BigDecimal leerPrecio(String texto) {
+        try {
+            BigDecimal precio = new BigDecimal(texto.trim());
+            return precio.compareTo(BigDecimal.ZERO) > 0 ? precio : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void aviso(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje);
+    }
+
+    private void error(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private boolean confirmar(String mensaje) {
+        return JOptionPane.showConfirmDialog(this, mensaje, "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+    }
 
     /**
      * @param args the command line arguments

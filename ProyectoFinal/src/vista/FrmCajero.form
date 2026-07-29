@@ -37,9 +37,9 @@
                       <Component id="chkCuentaSeparada" min="-2" pref="164" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="IblImpuesto" min="-2" pref="39" max="-2" attributes="0"/>
-                          <Component id="IblSubTotal" min="-2" pref="84" max="-2" attributes="0"/>
-                          <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="IblImpuesto" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="IblSubTotal" min="-2" pref="220" max="-2" attributes="0"/>
+                          <Component id="jLabel3" alignment="0" min="-2" pref="220" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
@@ -105,6 +105,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Cerrar Sesion "/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCerrarSesionCajActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="scrComandasPendientes">
       <AuxValues>
@@ -116,7 +119,7 @@
         <Component class="javax.swing.JTable" name="tblComandasPendientes">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="5" rowCount="4">
+              <Table columnCount="5" rowCount="0">
                 <Column editable="true" title="N&#xfa;mero Comandas" type="java.lang.Object"/>
                 <Column editable="true" title="Origen" type="java.lang.Object"/>
                 <Column editable="true" title="Mesa " type="java.lang.Object"/>
@@ -170,7 +173,7 @@
         <Component class="javax.swing.JTable" name="tblDetalleFactura">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="4" rowCount="4">
+              <Table columnCount="4" rowCount="0">
                 <Column editable="true" title="&#xcd;tem " type="java.lang.Object"/>
                 <Column editable="true" title="Cantidad" type="java.lang.Object"/>
                 <Column editable="true" title="Precio Unitario" type="java.lang.Object"/>
@@ -247,6 +250,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Detalle Caja"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnVerDetalleCajActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnDividirCuenta">
       <Properties>
@@ -255,6 +261,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Dividir Cuenta"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDividirCuentaActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnGenerarFactura">
       <Properties>
@@ -263,6 +272,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Generar Factura"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGenerarFacturaActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnVerHistorialFacturas">
       <Properties>
@@ -271,6 +283,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Historial Facturas"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnVerHistorialFacturasActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

@@ -4,19 +4,60 @@
  */
 package vista;
 
+import dao.ComandaDAO;
+import dao.DetalleComandaDAO;
+import dao.DetalleFacturaDAO;
+import dao.FacturaDAO;
+import dao.MesaDAO;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import model.Comanda;
+import model.DetalleComanda;
+import model.DetalleFactura;
+import model.Factura;
+import model.Mesa;
+import session.SesionActual;
+
 /**
+ * Pantalla de la caja: cobra las comandas, junta o separada, aplicando el IVA.
  *
  * @author valer
  */
 public class FrmCajero extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmCajero.class.getName());
+
+    private final ComandaDAO comandaDAO = new ComandaDAO();
+    private final DetalleComandaDAO detalleDAO = new DetalleComandaDAO();
+    private final FacturaDAO facturaDAO = new FacturaDAO();
+    private final DetalleFacturaDAO detalleFacturaDAO = new DetalleFacturaDAO();
+    private final MesaDAO mesaDAO = new MesaDAO();
+
+    private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private List<Comanda> porCobrar = new ArrayList<>();       // comandas que faltan por facturar
+    private List<DetalleComanda> detallesEnPantalla = new ArrayList<>(); // items sin facturar de la comanda escogida
 
     /**
      * Creates new form FrmCajero
      */
     public FrmCajero() {
         initComponents();
+        setLocationRelativeTo(null);
+        setTitle("Restaurante - Caja");
+
+        tblComandasPendientes.setDefaultEditor(Object.class, null);
+        tblDetalleFactura.setDefaultEditor(Object.class, null);
+
+        if (SesionActual.getUsuario() != null) {
+            IblBienvenidaCaj.setText("Cajero: " + SesionActual.getNombre());
+        }
+        cargarPorCobrar();
     }
 
     /**
@@ -50,13 +91,13 @@ public class FrmCajero extends javax.swing.JFrame {
 
         btnCerrarSesionCaj.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesionCaj.setText("Cerrar Sesion ");
+        btnCerrarSesionCaj.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarSesionCajActionPerformed(evt);
+        });
 
         tblComandasPendientes.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Número Comandas", "Origen", "Mesa ", "Empleado", "Total"
@@ -66,10 +107,7 @@ public class FrmCajero extends javax.swing.JFrame {
 
         tblDetalleFactura.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "Ítem ", "Cantidad", "Precio Unitario", "Precio Total "
@@ -91,15 +129,27 @@ public class FrmCajero extends javax.swing.JFrame {
 
         btnVerDetalleCaj.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerDetalleCaj.setText("Detalle Caja");
+        btnVerDetalleCaj.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnVerDetalleCajActionPerformed(evt);
+        });
 
         btnDividirCuenta.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnDividirCuenta.setText("Dividir Cuenta");
+        btnDividirCuenta.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnDividirCuentaActionPerformed(evt);
+        });
 
         btnGenerarFactura.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGenerarFactura.setText("Generar Factura");
+        btnGenerarFactura.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGenerarFacturaActionPerformed(evt);
+        });
 
         btnVerHistorialFacturas.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerHistorialFacturas.setText("Historial Facturas");
+        btnVerHistorialFacturas.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnVerHistorialFacturasActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -118,9 +168,9 @@ public class FrmCajero extends javax.swing.JFrame {
                         .addComponent(chkCuentaSeparada, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(IblImpuesto, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(IblSubTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3)))
+                            .addComponent(IblImpuesto, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(IblSubTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(btnVerDetalleCaj)
                         .addGap(39, 39, 39)
@@ -162,6 +212,268 @@ public class FrmCajero extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCerrarSesionCajActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionCajActionPerformed
+        SesionActual.cerrarSesion();
+        new FrmLogin().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarSesionCajActionPerformed
+
+    private void btnVerDetalleCajActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerDetalleCajActionPerformed
+        verDetalle();
+    }//GEN-LAST:event_btnVerDetalleCajActionPerformed
+
+    private void btnGenerarFacturaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarFacturaActionPerformed
+        // cuenta junta: se cobra todo lo que falta de la comanda
+        if (chkCuentaSeparada.isSelected()) {
+            JOptionPane.showMessageDialog(this,
+                    "Tiene marcada la cuenta separada.\nUse el botón Dividir Cuenta con los ítems seleccionados.");
+            return;
+        }
+        facturar(detallesEnPantalla, "toda la cuenta");
+    }//GEN-LAST:event_btnGenerarFacturaActionPerformed
+
+    private void btnDividirCuentaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDividirCuentaActionPerformed
+        dividirCuenta();
+    }//GEN-LAST:event_btnDividirCuentaActionPerformed
+
+    private void btnVerHistorialFacturasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerHistorialFacturasActionPerformed
+        verHistorial();
+    }//GEN-LAST:event_btnVerHistorialFacturasActionPerformed
+
+    /** Trae las comandas que todavia tienen algo sin facturar. */
+    private void cargarPorCobrar() {
+        porCobrar = new ArrayList<>();
+        List<Mesa> todasLasMesas = mesaDAO.findAll();
+
+        DefaultTableModel modelo = (DefaultTableModel) tblComandasPendientes.getModel();
+        modelo.setRowCount(0);
+
+        for (Comanda c : comandaDAO.findAll()) {
+            // solo se cobra lo que ya salió de cocina/bar o lo que el salonero cerró
+            if (!"lista".equals(c.getEstado()) && !"cerrada".equals(c.getEstado())) {
+                continue;
+            }
+            List<DetalleComanda> faltantes = detallesSinFacturar(c.getId_comanda());
+            if (faltantes.isEmpty()) {
+                continue; // esa comanda ya se cobró completa
+            }
+            porCobrar.add(c);
+            modelo.addRow(new Object[]{
+                c.getId_comanda(), c.getORIGEN(), nombreMesa(todasLasMesas, c.getId_mesa()),
+                c.getCodigo_emp(), sumar(faltantes)
+            });
+        }
+
+        limpiarDetalle();
+    }
+
+    /** Muestra los items que faltan por cobrar de la comanda escogida. */
+    private void verDetalle() {
+        int fila = tblComandasPendientes.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+
+        detallesEnPantalla = detallesSinFacturar(porCobrar.get(fila).getId_comanda());
+
+        DefaultTableModel modelo = (DefaultTableModel) tblDetalleFactura.getModel();
+        modelo.setRowCount(0);
+        for (DetalleComanda d : detallesEnPantalla) {
+            modelo.addRow(new Object[]{
+                detalleDAO.getNombreItem(d), d.getCantidad(), d.getPrecio_unit(), totalLinea(d)
+            });
+        }
+
+        mostrarTotales(detallesEnPantalla);
+    }
+
+    /** Cobra solo los items marcados en la tabla (una persona de la mesa). */
+    private void dividirCuenta() {
+        if (!chkCuentaSeparada.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Marque primero la casilla \"Cuenta Separada?\".");
+            return;
+        }
+        if (detallesEnPantalla.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Primero cargue el detalle de una comanda.");
+            return;
+        }
+
+        int[] filas = tblDetalleFactura.getSelectedRows();
+        if (filas.length == 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione los ítems que va a pagar esta persona.");
+            return;
+        }
+
+        List<DetalleComanda> deEstaPersona = new ArrayList<>();
+        for (int fila : filas) {
+            deEstaPersona.add(detallesEnPantalla.get(fila));
+        }
+        facturar(deEstaPersona, "los ítems seleccionados");
+    }
+
+    /** Crea la factura con los items que le pasen y le aplica el IVA. */
+    private void facturar(List<DetalleComanda> items, String queSeCobra) {
+        int fila = tblComandasPendientes.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+        if (items.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Primero presione Detalle Caja para cargar los ítems.");
+            return;
+        }
+
+        Comanda comanda = porCobrar.get(fila);
+        BigDecimal subtotal = sumar(items);
+
+        int respuesta = JOptionPane.showConfirmDialog(this,
+                "Cobrar " + queSeCobra + " de la comanda #" + comanda.getId_comanda()
+                + "\nSubtotal: ₡" + subtotal + "  |  Total con IVA: ₡" + conIva(subtotal),
+                "Confirmar cobro", JOptionPane.YES_NO_OPTION);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        Factura factura = new Factura();
+        factura.setId_comanda(comanda.getId_comanda());
+        factura.setCodigo_cajero(SesionActual.getCodigo());
+        factura.setFecha_emision(LocalDateTime.now());
+        factura.setSubtotal(subtotal); // el DAO calcula impuesto y total con el 13%
+        factura.setTipo("final");
+        factura.setEstado("pagada");
+
+        int idFactura = facturaDAO.insertGetId(factura);
+        if (idFactura <= 0) {
+            JOptionPane.showMessageDialog(this, "No se pudo generar la factura.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // dejo apuntado cuales items entraron en esta factura
+        for (DetalleComanda d : items) {
+            DetalleFactura df = new DetalleFactura();
+            df.setId_factura(idFactura);
+            df.setId_detalle(d.getId_detalle());
+            detalleFacturaDAO.insert(df);
+        }
+
+        // si ya no queda nada pendiente, la comanda se cierra y la mesa queda libre
+        if (detallesSinFacturar(comanda.getId_comanda()).isEmpty()) {
+            comandaDAO.updateEstado(comanda.getId_comanda(), "cerrada");
+            liberarMesa(comanda.getId_mesa());
+        }
+
+        JOptionPane.showMessageDialog(this,
+                "Factura #" + idFactura + " generada.\nSubtotal: ₡" + factura.getSubtotal()
+                + "\nIVA (13%): ₡" + factura.getImpuesto() + "\nTotal: ₡" + factura.getTotal());
+
+        cargarPorCobrar();
+    }
+
+    /** Muestra en un cuadro las facturas que se han emitido. */
+    private void verHistorial() {
+        List<Factura> facturas = facturaDAO.findAll();
+        if (facturas.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Todavía no hay facturas emitidas.");
+            return;
+        }
+
+        String texto = "Facturas emitidas:\n\n";
+        BigDecimal granTotal = BigDecimal.ZERO;
+        for (Factura f : facturas) {
+            String fecha = f.getFecha_emision() != null ? f.getFecha_emision().format(formatoHora) : "";
+            texto += "#" + f.getId_factura() + "  comanda " + f.getId_comanda() + "  " + fecha
+                    + "  ₡" + f.getTotal() + "  (" + f.getEstado() + ")\n";
+            if (f.getTotal() != null) {
+                granTotal = granTotal.add(f.getTotal());
+            }
+        }
+        texto += "\nTotal facturado: ₡" + granTotal;
+
+        JOptionPane.showMessageDialog(this, texto, "Historial de facturas", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // ------------------ ayudas ------------------
+
+    /** Devuelve los detalles de la comanda que todavia no estan en ninguna factura. */
+    private List<DetalleComanda> detallesSinFacturar(int idComanda) {
+        // primero junto los detalles que ya se cobraron en facturas anteriores
+        List<Integer> yaCobrados = new ArrayList<>();
+        for (Factura f : facturaDAO.findByComanda(idComanda)) {
+            for (DetalleFactura df : detalleFacturaDAO.findByFactura(f.getId_factura())) {
+                yaCobrados.add(df.getId_detalle());
+            }
+        }
+
+        List<DetalleComanda> faltantes = new ArrayList<>();
+        for (DetalleComanda d : detalleDAO.findByComanda(idComanda)) {
+            if (!yaCobrados.contains(d.getId_detalle())) {
+                faltantes.add(d);
+            }
+        }
+        return faltantes;
+    }
+
+    /** Pone el subtotal, el IVA y el total en las etiquetas. */
+    private void mostrarTotales(List<DetalleComanda> items) {
+        BigDecimal subtotal = sumar(items);
+        BigDecimal iva = subtotal.multiply(FacturaDAO.IVA).setScale(2, java.math.RoundingMode.HALF_UP);
+        IblSubTotal.setText("SubTotal: ₡" + subtotal);
+        IblImpuesto.setText("IVA (13%): ₡" + iva);
+        jLabel3.setText("Total: ₡" + subtotal.add(iva));
+    }
+
+    /** Suma el precio de todos los items. */
+    private BigDecimal sumar(List<DetalleComanda> items) {
+        BigDecimal suma = BigDecimal.ZERO;
+        for (DetalleComanda d : items) {
+            suma = suma.add(totalLinea(d));
+        }
+        return suma;
+    }
+
+    /** Precio de una linea = precio unitario por cantidad. */
+    private BigDecimal totalLinea(DetalleComanda detalle) {
+        if (detalle.getPrecio_unit() == null) {
+            return BigDecimal.ZERO;
+        }
+        return detalle.getPrecio_unit().multiply(new BigDecimal(detalle.getCantidad()));
+    }
+
+    /** Le suma el 13% al subtotal. */
+    private BigDecimal conIva(BigDecimal subtotal) {
+        return subtotal.add(subtotal.multiply(FacturaDAO.IVA).setScale(2, java.math.RoundingMode.HALF_UP));
+    }
+
+    /** Deja la mesa disponible otra vez. */
+    private void liberarMesa(int idMesa) {
+        for (Mesa m : mesaDAO.findAll()) {
+            if (m.getId_mesa() == idMesa) {
+                m.setDisponible(1);
+                mesaDAO.update(m);
+            }
+        }
+    }
+
+    /** Busca el número de mesa, para no mostrar el id pelado. */
+    private String nombreMesa(List<Mesa> lista, int idMesa) {
+        for (Mesa m : lista) {
+            if (m.getId_mesa() == idMesa) {
+                return "Mesa " + m.getNumero_mesa();
+            }
+        }
+        return "-";
+    }
+
+    /** Deja el detalle y los totales en blanco. */
+    private void limpiarDetalle() {
+        detallesEnPantalla = new ArrayList<>();
+        ((DefaultTableModel) tblDetalleFactura.getModel()).setRowCount(0);
+        IblSubTotal.setText("SubTotal:");
+        IblImpuesto.setText("IVA:");
+        jLabel3.setText("Total:");
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -169,7 +481,7 @@ public class FrmCajero extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

@@ -4,19 +4,62 @@
  */
 package vista;
 
+import dao.ComandaDAO;
+import dao.DetalleComandaDAO;
+import dao.MesaDAO;
+import dao.ProcesoBarDAO;
+import dao.ProcesoCocinaDAO;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import model.Comanda;
+import model.DetalleComanda;
+import model.Mesa;
+import model.ProcesoBar;
+import model.ProcesoCocina;
+import session.SesionActual;
+
 /**
+ * Pantalla de la cocina: muestra las comandas pendientes y las marca como listas.
  *
  * @author valer
  */
 public class FrmCocinero extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmCocinero.class.getName());
+
+    // una comanda tiene 20 minutos para ser servida
+    private static final int LIMITE_MINUTOS = 20;
+
+    private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
+    private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
+    private final ComandaDAO comandaDAO = new ComandaDAO();
+    private final DetalleComandaDAO detalleDAO = new DetalleComandaDAO();
+    private final MesaDAO mesaDAO = new MesaDAO();
+
+    private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private List<ProcesoCocina> pendientes = new ArrayList<>();
 
     /**
      * Creates new form FrmCocinero
      */
     public FrmCocinero() {
         initComponents();
+        setLocationRelativeTo(null);
+        setTitle("Restaurante - Cocina");
+
+        tblComandasCocina.setDefaultEditor(Object.class, null);
+        tblDetalleComandaCocina.setDefaultEditor(Object.class, null);
+
+        if (SesionActual.getUsuario() != null) {
+            IblBienvenidaCos.setText("Cocina: " + SesionActual.getNombre());
+        }
+        cargarPendientes();
     }
 
     /**
@@ -45,13 +88,13 @@ public class FrmCocinero extends javax.swing.JFrame {
 
         btnCerrarSesionCos.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesionCos.setText("Cerrar Sesion ");
+        btnCerrarSesionCos.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarSesionCosActionPerformed(evt);
+        });
 
         tblComandasCocina.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Número Comandas ", "Origen ", "Mesa", "Hora Recibida ", "Estado"
@@ -61,10 +104,7 @@ public class FrmCocinero extends javax.swing.JFrame {
 
         tblDetalleComandaCocina.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "Plato", "Cantidad"
@@ -74,12 +114,21 @@ public class FrmCocinero extends javax.swing.JFrame {
 
         btnVerDetalleCocina.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerDetalleCocina.setText("Detalle Comanda");
+        btnVerDetalleCocina.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnVerDetalleCocinaActionPerformed(evt);
+        });
 
         btnMarcarListaCocina.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnMarcarListaCocina.setText("Proceso Cocina ");
+        btnMarcarListaCocina.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnMarcarListaCocinaActionPerformed(evt);
+        });
 
         btnRefrescarCocina.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnRefrescarCocina.setText("Refrescar Cocina ");
+        btnRefrescarCocina.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnRefrescarCocinaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -127,6 +176,125 @@ public class FrmCocinero extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCerrarSesionCosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionCosActionPerformed
+        SesionActual.cerrarSesion();
+        new FrmLogin().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarSesionCosActionPerformed
+
+    private void btnRefrescarCocinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefrescarCocinaActionPerformed
+        cargarPendientes();
+    }//GEN-LAST:event_btnRefrescarCocinaActionPerformed
+
+    private void btnVerDetalleCocinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerDetalleCocinaActionPerformed
+        verDetalle();
+    }//GEN-LAST:event_btnVerDetalleCocinaActionPerformed
+
+    private void btnMarcarListaCocinaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarcarListaCocinaActionPerformed
+        marcarLista();
+    }//GEN-LAST:event_btnMarcarListaCocinaActionPerformed
+
+    /** Trae las comandas que la cocina todavia no ha terminado. */
+    private void cargarPendientes() {
+        pendientes = cocinaDAO.findPendientes();
+        List<Mesa> todasLasMesas = mesaDAO.findAll();
+
+        DefaultTableModel modelo = (DefaultTableModel) tblComandasCocina.getModel();
+        modelo.setRowCount(0);
+
+        for (ProcesoCocina p : pendientes) {
+            Comanda c = comandaDAO.findById(p.getId_comanda());
+            if (c == null) {
+                continue;
+            }
+            String hora = p.getHora_recibida() != null ? p.getHora_recibida().format(formatoHora) : "";
+            // si ya pasó de los 20 minutos lo aviso en la misma tabla
+            String estado = c.getEstado();
+            if (minutosEsperando(p) > LIMITE_MINUTOS) {
+                estado = estado + " (atrasada)";
+            }
+            modelo.addRow(new Object[]{c.getId_comanda(), c.getORIGEN(), nombreMesa(todasLasMesas, c.getId_mesa()), hora, estado});
+        }
+
+        limpiarDetalle();
+    }
+
+    /** Muestra solo los platos de la comanda seleccionada (las bebidas van al bar). */
+    private void verDetalle() {
+        int fila = tblComandasCocina.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+
+        DefaultTableModel modelo = (DefaultTableModel) tblDetalleComandaCocina.getModel();
+        modelo.setRowCount(0);
+
+        List<DetalleComanda> detalles = detalleDAO.findByComanda(pendientes.get(fila).getId_comanda());
+        for (DetalleComanda d : detalles) {
+            if ("comida".equals(d.getTipo_item())) {
+                modelo.addRow(new Object[]{detalleDAO.getNombreItem(d), d.getCantidad()});
+            }
+        }
+
+        if (modelo.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Esa comanda no tiene platos, solo bebidas.");
+        }
+    }
+
+    /** Marca la comanda como lista en cocina y avisa al salonero. */
+    private void marcarLista() {
+        int fila = tblComandasCocina.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+
+        ProcesoCocina proceso = pendientes.get(fila);
+        proceso.setHora_lista(LocalDateTime.now());
+        proceso.setCodigo_cos(SesionActual.getCodigo());
+
+        if (!cocinaDAO.update(proceso)) {
+            JOptionPane.showMessageDialog(this, "No se pudo marcar la comanda.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // la comanda queda lista solo si el bar tambien terminó lo suyo
+        ProcesoBar procesoBar = barDAO.findByComanda(proceso.getId_comanda());
+        if (procesoBar == null || procesoBar.getHora_lista() != null) {
+            comandaDAO.updateEstado(proceso.getId_comanda(), "lista");
+            JOptionPane.showMessageDialog(this, "Comanda #" + proceso.getId_comanda() + " lista para servir.");
+        } else {
+            comandaDAO.updateEstado(proceso.getId_comanda(), "en_proceso");
+            JOptionPane.showMessageDialog(this, "Platos listos. Falta que el bar termine las bebidas.");
+        }
+
+        cargarPendientes();
+    }
+
+    /** Deja vacía la tabla del detalle. */
+    private void limpiarDetalle() {
+        ((DefaultTableModel) tblDetalleComandaCocina.getModel()).setRowCount(0);
+    }
+
+    /** Minutos que lleva esperando el pedido en cocina. */
+    private long minutosEsperando(ProcesoCocina proceso) {
+        if (proceso.getHora_recibida() == null) {
+            return 0;
+        }
+        return Duration.between(proceso.getHora_recibida(), LocalDateTime.now()).toMinutes();
+    }
+
+    /** Busca el número de mesa, para no mostrar el id pelado. */
+    private String nombreMesa(List<Mesa> lista, int idMesa) {
+        for (Mesa m : lista) {
+            if (m.getId_mesa() == idMesa) {
+                return "Mesa " + m.getNumero_mesa();
+            }
+        }
+        return "-";
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -134,7 +302,7 @@ public class FrmCocinero extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

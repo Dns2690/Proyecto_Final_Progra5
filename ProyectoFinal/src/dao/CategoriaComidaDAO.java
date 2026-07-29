@@ -13,6 +13,19 @@ public class CategoriaComidaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
+    // 1. CREATE (Insertar)
+    public boolean insert(CategoriaComida cat) {
+        String sql = "INSERT INTO categoria_comida (nombre) VALUES (?)";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, cat.getNombre());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al insertar categoría de comida: " + e.getMessage());
+            return false;
+        }
+    }
+
     // Método directo para listar categorías de comida
     public List<CategoriaComida> findAll() {
         String sql = "SELECT * FROM categoria_comida";
@@ -31,5 +44,32 @@ public class CategoriaComidaDAO {
             System.out.println("Error al listar categorías de comida: " + e.getMessage());
         }
         return lista;
+    }
+
+    // 3. UPDATE (Modificar)
+    public boolean update(CategoriaComida cat) {
+        String sql = "UPDATE categoria_comida SET nombre = ? WHERE id_categoria = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, cat.getNombre());
+            ps.setInt(2, cat.getId_categoria());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al modificar categoría de comida: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 4. DELETE (Eliminar)
+    public boolean delete(int id) {
+        String sql = "DELETE FROM categoria_comida WHERE id_categoria = ?";
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al eliminar categoría de comida: " + e.getMessage());
+            return false;
+        }
     }
 }

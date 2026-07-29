@@ -104,6 +104,7 @@ public class ComidaDAO {
                     c.setNombre(rs.getString("nombre"));
                     c.setId_categoria(rs.getInt("id_categoria"));
                     c.setDescripcion(rs.getString("descripcion"));
+                    c.setPrecio(rs.getBigDecimal("precio"));
                     c.setActivo(rs.getInt("activo"));
                     return c;
                 }

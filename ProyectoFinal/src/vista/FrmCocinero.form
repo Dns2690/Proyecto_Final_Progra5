@@ -89,6 +89,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Cerrar Sesion "/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCerrarSesionCosActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="scrComandasCocina">
       <AuxValues>
@@ -100,7 +103,7 @@
         <Component class="javax.swing.JTable" name="tblComandasCocina">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="5" rowCount="4">
+              <Table columnCount="5" rowCount="0">
                 <Column editable="true" title="N&#xfa;mero Comandas " type="java.lang.Object"/>
                 <Column editable="true" title="Origen " type="java.lang.Object"/>
                 <Column editable="true" title="Mesa" type="java.lang.Object"/>
@@ -154,7 +157,7 @@
         <Component class="javax.swing.JTable" name="tblDetalleComandaCocina">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="2" rowCount="4">
+              <Table columnCount="2" rowCount="0">
                 <Column editable="true" title="Plato" type="java.lang.Object"/>
                 <Column editable="true" title="Cantidad" type="java.lang.Object"/>
               </Table>
@@ -187,6 +190,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Detalle Comanda"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnVerDetalleCocinaActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnMarcarListaCocina">
       <Properties>
@@ -195,6 +201,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Proceso Cocina "/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnMarcarListaCocinaActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnRefrescarCocina">
       <Properties>
@@ -203,6 +212,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Refrescar Cocina "/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRefrescarCocinaActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

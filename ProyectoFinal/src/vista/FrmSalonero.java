@@ -4,19 +4,83 @@
  */
 package vista;
 
+import dao.AsignacionSeccionDAO;
+import dao.BebidaDAO;
+import dao.ComandaDAO;
+import dao.ComidaDAO;
+import dao.DetalleComandaDAO;
+import dao.MesaDAO;
+import dao.ProcesoBarDAO;
+import dao.ProcesoCocinaDAO;
+import dao.ReservaDAO;
+import dao.SeccionSalonDAO;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import model.AsignacionSeccion;
+import model.Bebida;
+import model.Comanda;
+import model.Comida;
+import model.DetalleComanda;
+import model.Mesa;
+import model.ProcesoBar;
+import model.ProcesoCocina;
+import model.Reserva;
+import model.SeccionSalon;
+import session.SesionActual;
+
 /**
+ * Pantalla del salonero: arma comandas, revisa las suyas y maneja reservas.
  *
  * @author valer
  */
 public class FrmSalonero extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmSalonero.class.getName());
+
+    // una comanda tiene 20 minutos para ser servida
+    private static final int LIMITE_MINUTOS = 20;
+
+    private final MesaDAO mesaDAO = new MesaDAO();
+    private final ComidaDAO comidaDAO = new ComidaDAO();
+    private final BebidaDAO bebidaDAO = new BebidaDAO();
+    private final ComandaDAO comandaDAO = new ComandaDAO();
+    private final DetalleComandaDAO detalleDAO = new DetalleComandaDAO();
+    private final ReservaDAO reservaDAO = new ReservaDAO();
+    private final AsignacionSeccionDAO asignacionDAO = new AsignacionSeccionDAO();
+    private final SeccionSalonDAO seccionDAO = new SeccionSalonDAO();
+    private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
+    private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
+
+    // formato para mostrar las horas
+    private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private List<Mesa> mesas = new ArrayList<>();            // mesas de mi seccion
+    private final List<DetalleComanda> orden = new ArrayList<>(); // items que voy agregando
+    private List<Comanda> misComandas = new ArrayList<>();
+    private List<Reserva> reservas = new ArrayList<>();
 
     /**
      * Creates new form FrmSalonero
      */
     public FrmSalonero() {
         initComponents();
+        setLocationRelativeTo(null);
+        setTitle("Restaurante - Salonero");
+
+        // las tablas son solo para ver, no para editar
+        tblOrdenActual.setDefaultEditor(Object.class, null);
+        tblMisComandas.setDefaultEditor(Object.class, null);
+        tblReservas.setDefaultEditor(Object.class, null);
+
+        cargarTodo();
     }
 
     /**
@@ -87,9 +151,16 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnCerrarSesionSal.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesionSal.setText("Cerrar Sesión");
+        btnCerrarSesionSal.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarSesionSalActionPerformed(evt);
+        });
 
         cmbMesaAsignada.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         cmbMesaAsignada.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4" }));
+
+        txtCodigoPlato.addActionListener((java.awt.event.ActionEvent evt) -> {
+            txtCodigoPlatoActionPerformed(evt);
+        });
 
         txtNombrePlato.setEditable(false);
 
@@ -100,9 +171,16 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnAgregarPlato.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnAgregarPlato.setText("Agregar Plato");
+        btnAgregarPlato.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnAgregarPlatoActionPerformed(evt);
+        });
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel2.setText("Código Bebida");
+
+        txtCodigoBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            txtCodigoBebidaActionPerformed(evt);
+        });
 
         txtNombreBebida.setEditable(false);
 
@@ -110,13 +188,13 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnAgregarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnAgregarBebida.setText("Agregar Bebida");
+        btnAgregarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnAgregarBebidaActionPerformed(evt);
+        });
 
         tblOrdenActual.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
                 "Tipo", "Ítem", "Cantidad"
@@ -126,9 +204,15 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnQuitarItem.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnQuitarItem.setText("Quitar Ítem");
+        btnQuitarItem.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnQuitarItemActionPerformed(evt);
+        });
 
         btnGenerarComanda.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGenerarComanda.setText("Generar Comanda ");
+        btnGenerarComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGenerarComandaActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlMesasComandaLayout = new javax.swing.GroupLayout(pnlMesasComanda);
         pnlMesasComanda.setLayout(pnlMesasComandaLayout);
@@ -199,10 +283,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         tblMisComandas.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         tblMisComandas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "Número Comanda ", "Mesa", "Hora Orden", "Estado"
@@ -220,8 +301,8 @@ public class FrmSalonero extends javax.swing.JFrame {
             pnlNotificacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlNotificacionLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(lblNotificacion, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(508, Short.MAX_VALUE))
+                .addComponent(lblNotificacion, javax.swing.GroupLayout.PREFERRED_SIZE, 500, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(79, Short.MAX_VALUE))
         );
         pnlNotificacionLayout.setVerticalGroup(
             pnlNotificacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -233,12 +314,21 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnVerDetalleComanda.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerDetalleComanda.setText("Detalle Comanda ");
+        btnVerDetalleComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnVerDetalleComandaActionPerformed(evt);
+        });
 
         btnCerrarComanda.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarComanda.setText("Cerrar Comanda");
+        btnCerrarComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarComandaActionPerformed(evt);
+        });
 
         btnRefrescarComandas.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnRefrescarComandas.setText("Refrescar Comandas ");
+        btnRefrescarComandas.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnRefrescarComandasActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout pnlMisComandasLayout = new javax.swing.GroupLayout(pnlMisComandas);
         pnlMisComandas.setLayout(pnlMisComandasLayout);
@@ -279,10 +369,7 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         tblReservas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
+
             },
             new String [] {
                 "ID", "Cliente", "Fecha", "Hora", "Personas", "Estado"
@@ -311,15 +398,27 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnConsultarDisponibilidad.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnConsultarDisponibilidad.setText("Disponibilidad ");
+        btnConsultarDisponibilidad.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnConsultarDisponibilidadActionPerformed(evt);
+        });
 
         btnGuardarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarReserva.setText("Guardar Reserva");
+        btnGuardarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnGuardarReservaActionPerformed(evt);
+        });
 
         btnCancelarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCancelarReserva.setText("Cancelar Reserva ");
+        btnCancelarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCancelarReservaActionPerformed(evt);
+        });
 
         btnLimpiarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarReserva.setText("Limpiar Reserva");
+        btnLimpiarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnLimpiarReservaActionPerformed(evt);
+        });
 
         IblDisponibilidad.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
 
@@ -329,8 +428,8 @@ public class FrmSalonero extends javax.swing.JFrame {
             pnlDisponibilidadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlDisponibilidadLayout.createSequentialGroup()
                 .addGap(22, 22, 22)
-                .addComponent(IblDisponibilidad, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(166, Short.MAX_VALUE))
+                .addComponent(IblDisponibilidad, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(32, Short.MAX_VALUE))
         );
         pnlDisponibilidadLayout.setVerticalGroup(
             pnlDisponibilidadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -468,6 +567,469 @@ public class FrmSalonero extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCerrarSesionSalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionSalActionPerformed
+        SesionActual.cerrarSesion();
+        new FrmLogin().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarSesionSalActionPerformed
+
+    private void txtCodigoPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoPlatoActionPerformed
+        // al darle enter al codigo muestro el nombre del plato
+        Comida comida = comidaDAO.findById(leerEntero(txtCodigoPlato.getText()));
+        txtNombrePlato.setText(comida != null ? comida.getNombre() : "No existe ese código");
+    }//GEN-LAST:event_txtCodigoPlatoActionPerformed
+
+    private void txtCodigoBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoBebidaActionPerformed
+        // al darle enter al codigo muestro el nombre de la bebida
+        Bebida bebida = bebidaDAO.findById(leerEntero(txtCodigoBebida.getText()));
+        txtNombreBebida.setText(bebida != null ? bebida.getNombre() : "No existe ese código");
+    }//GEN-LAST:event_txtCodigoBebidaActionPerformed
+
+    private void btnAgregarPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarPlatoActionPerformed
+        Comida comida = comidaDAO.findById(leerEntero(txtCodigoPlato.getText()));
+        if (comida == null) {
+            JOptionPane.showMessageDialog(this, "No existe una comida con ese código.");
+            return;
+        }
+        if (comida.getActivo() == 0) {
+            JOptionPane.showMessageDialog(this, "Ese plato no está disponible hoy.");
+            return;
+        }
+        agregarItem("comida", comida.getId_comida(), (Integer) spnCantidadPlato.getValue(), comida.getPrecio());
+        txtCodigoPlato.setText("");
+        txtNombrePlato.setText("");
+        spnCantidadPlato.setValue(1);
+    }//GEN-LAST:event_btnAgregarPlatoActionPerformed
+
+    private void btnAgregarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarBebidaActionPerformed
+        Bebida bebida = bebidaDAO.findById(leerEntero(txtCodigoBebida.getText()));
+        if (bebida == null) {
+            JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
+            return;
+        }
+        if (bebida.getActivo() == 0) {
+            JOptionPane.showMessageDialog(this, "Esa bebida no está disponible hoy.");
+            return;
+        }
+        agregarItem("bebida", bebida.getId_bebida(), (Integer) spnCantidadBebida.getValue(), bebida.getPrecio());
+        txtCodigoBebida.setText("");
+        txtNombreBebida.setText("");
+        spnCantidadBebida.setValue(1);
+    }//GEN-LAST:event_btnAgregarBebidaActionPerformed
+
+    private void btnQuitarItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnQuitarItemActionPerformed
+        int fila = tblOrdenActual.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione el ítem que quiere quitar.");
+            return;
+        }
+        orden.remove(fila);
+        pintarOrden();
+    }//GEN-LAST:event_btnQuitarItemActionPerformed
+
+    private void btnGenerarComandaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarComandaActionPerformed
+        generarComanda();
+    }//GEN-LAST:event_btnGenerarComandaActionPerformed
+
+    private void btnRefrescarComandasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefrescarComandasActionPerformed
+        cargarMisComandas();
+    }//GEN-LAST:event_btnRefrescarComandasActionPerformed
+
+    private void btnVerDetalleComandaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerDetalleComandaActionPerformed
+        verDetalleComanda();
+    }//GEN-LAST:event_btnVerDetalleComandaActionPerformed
+
+    private void btnCerrarComandaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarComandaActionPerformed
+        cerrarComanda();
+    }//GEN-LAST:event_btnCerrarComandaActionPerformed
+
+    private void btnConsultarDisponibilidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarDisponibilidadActionPerformed
+        LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
+        LocalTime hora = leerHora(txtHoraReserva.getText().trim());
+        if (fecha == null || hora == null) {
+            JOptionPane.showMessageDialog(this, "Revise la fecha (aaaa-mm-dd) y la hora (hh:mm).");
+            return;
+        }
+        if (reservaDAO.findDisponibilidad(fecha, hora)) {
+            IblDisponibilidad.setForeground(new java.awt.Color(0, 128, 0));
+            IblDisponibilidad.setText("Sí hay campo");
+        } else {
+            IblDisponibilidad.setForeground(java.awt.Color.RED);
+            IblDisponibilidad.setText("Lleno a esa hora");
+        }
+    }//GEN-LAST:event_btnConsultarDisponibilidadActionPerformed
+
+    private void btnGuardarReservaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarReservaActionPerformed
+        guardarReserva();
+    }//GEN-LAST:event_btnGuardarReservaActionPerformed
+
+    private void btnCancelarReservaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarReservaActionPerformed
+        cancelarReserva();
+    }//GEN-LAST:event_btnCancelarReservaActionPerformed
+
+    private void btnLimpiarReservaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarReservaActionPerformed
+        limpiarReserva();
+    }//GEN-LAST:event_btnLimpiarReservaActionPerformed
+
+    // ------------------ carga de datos ------------------
+
+    /** Llena la pantalla con los datos del salonero que inicio sesion. */
+    private void cargarTodo() {
+        if (SesionActual.getUsuario() == null) {
+            return; // por si abren la ventana sin haber hecho login
+        }
+        IblBienvenidaSal.setText("Salonero: " + SesionActual.getNombre());
+        IblDisponibilidad.setText("");
+        txtFechaReserva.setText(LocalDate.now().toString());
+        txtHoraReserva.setText("19:00");
+        cargarSeccionYMesas();
+        cargarMisComandas();
+        cargarReservas();
+    }
+
+    /** Busca la seccion que me tocó hoy y llena el combo con sus mesas. */
+    private void cargarSeccionYMesas() {
+        cmbMesaAsignada.removeAllItems();
+        mesas = new ArrayList<>();
+
+        AsignacionSeccion asignacion = asignacionDAO.findBySaloneroFecha(SesionActual.getCodigo(), LocalDate.now());
+        if (asignacion == null) {
+            IblSeccionAsignada.setText("Sección asignada hoy: ninguna");
+            return;
+        }
+
+        SeccionSalon seccion = seccionDAO.findById(asignacion.getIdSeccion());
+        IblSeccionAsignada.setText("Sección asignada hoy: " + (seccion != null ? seccion.getNombre() : "?"));
+
+        mesas = mesaDAO.findBySeccion(asignacion.getIdSeccion());
+        for (Mesa m : mesas) {
+            String estado = m.getDisponible() == 1 ? "libre" : "ocupada";
+            cmbMesaAsignada.addItem("Mesa " + m.getNumero_mesa() + " (" + estado + ")");
+        }
+    }
+
+    /** Trae mis comandas y avisa si alguna pasó los 20 minutos. */
+    private void cargarMisComandas() {
+        misComandas = comandaDAO.findByEmpleado(SesionActual.getCodigo());
+        List<Mesa> todasLasMesas = mesaDAO.findAll();
+
+        DefaultTableModel modelo = (DefaultTableModel) tblMisComandas.getModel();
+        modelo.setRowCount(0);
+
+        int atrasadas = 0;
+        for (Comanda c : misComandas) {
+            String hora = c.getHora_orden() != null ? c.getHora_orden().format(formatoHora) : "";
+            modelo.addRow(new Object[]{c.getId_comanda(), nombreMesa(todasLasMesas, c.getId_mesa()), hora, c.getEstado()});
+            if (minutosDeAtraso(c) > LIMITE_MINUTOS) {
+                atrasadas++;
+            }
+        }
+
+        if (atrasadas > 0) {
+            lblNotificacion.setForeground(java.awt.Color.RED);
+            lblNotificacion.setText("Atención: " + atrasadas + " comanda(s) pasaron los " + LIMITE_MINUTOS + " minutos");
+        } else {
+            lblNotificacion.setForeground(new java.awt.Color(0, 128, 0));
+            lblNotificacion.setText("Todas las comandas están a tiempo");
+        }
+    }
+
+    /** Llena la tabla de reservas. */
+    private void cargarReservas() {
+        reservas = reservaDAO.findAll();
+        DefaultTableModel modelo = (DefaultTableModel) tblReservas.getModel();
+        modelo.setRowCount(0);
+        for (Reserva r : reservas) {
+            modelo.addRow(new Object[]{
+                r.getId_reserva(), r.getNombre_cliente(), r.getFecha_reserva(),
+                r.getHora_reserva(), r.getCantidad_pers(), r.getEstado()
+            });
+        }
+    }
+
+    // ------------------ comandas ------------------
+
+    /** Mete un item a la orden que estoy armando (todavia no va a la base). */
+    private void agregarItem(String tipo, int idItem, int cantidad, BigDecimal precio) {
+        DetalleComanda detalle = new DetalleComanda();
+        detalle.setTipo_item(tipo);
+        detalle.setId_item(idItem);
+        detalle.setCantidad(cantidad);
+        detalle.setPrecio_unit(precio);
+        orden.add(detalle);
+        pintarOrden();
+    }
+
+    /** Vuelve a dibujar la tabla de la orden actual. */
+    private void pintarOrden() {
+        DefaultTableModel modelo = (DefaultTableModel) tblOrdenActual.getModel();
+        modelo.setRowCount(0);
+        for (DetalleComanda d : orden) {
+            modelo.addRow(new Object[]{d.getTipo_item(), detalleDAO.getNombreItem(d), d.getCantidad()});
+        }
+    }
+
+    /** Guarda la comanda con sus detalles y la manda a cocina y/o al bar. */
+    private void generarComanda() {
+        int fila = cmbMesaAsignada.getSelectedIndex();
+        if (fila < 0 || mesas.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No tiene mesas asignadas para hoy.");
+            return;
+        }
+        if (orden.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Agregue al menos un plato o una bebida.");
+            return;
+        }
+
+        Mesa mesa = mesas.get(fila);
+
+        Comanda comanda = new Comanda();
+        comanda.setORIGEN("salon");
+        comanda.setCodigo_emp(SesionActual.getCodigo());
+        comanda.setId_mesa(mesa.getId_mesa());
+        comanda.setHora_orden(LocalDateTime.now());
+        comanda.setEstado("abierta");
+
+        int idComanda = comandaDAO.insertGetId(comanda);
+        if (idComanda <= 0) {
+            JOptionPane.showMessageDialog(this, "No se pudo guardar la comanda.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean hayComida = false;
+        boolean hayBebida = false;
+        for (DetalleComanda d : orden) {
+            d.setId_comanda(idComanda);
+            detalleDAO.insert(d);
+            if ("comida".equals(d.getTipo_item())) {
+                hayComida = true;
+            } else {
+                hayBebida = true;
+            }
+        }
+
+        // si pidieron comida va a cocina, si pidieron bebida va al bar
+        if (hayComida) {
+            ProcesoCocina pc = new ProcesoCocina();
+            pc.setId_comanda(idComanda);
+            pc.setHora_recibida(LocalDateTime.now());
+            cocinaDAO.insert(pc);
+        }
+        if (hayBebida) {
+            ProcesoBar pb = new ProcesoBar();
+            pb.setId_comanda(idComanda);
+            pb.setHora_recibida(LocalDateTime.now());
+            barDAO.insert(pb);
+        }
+
+        // la mesa queda ocupada
+        mesa.setDisponible(0);
+        mesaDAO.update(mesa);
+
+        JOptionPane.showMessageDialog(this, "Comanda #" + idComanda + " generada para la mesa " + mesa.getNumero_mesa());
+
+        orden.clear();
+        pintarOrden();
+        cargarSeccionYMesas();
+        cargarMisComandas();
+    }
+
+    /** Muestra los items y el total de la comanda seleccionada. */
+    private void verDetalleComanda() {
+        int fila = tblMisComandas.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la tabla.");
+            return;
+        }
+
+        Comanda comanda = misComandas.get(fila);
+        List<DetalleComanda> detalles = detalleDAO.findByComanda(comanda.getId_comanda());
+
+        String texto = "Comanda #" + comanda.getId_comanda() + "  (" + comanda.getEstado() + ")\n\n";
+        BigDecimal total = BigDecimal.ZERO;
+        for (DetalleComanda d : detalles) {
+            BigDecimal linea = d.getPrecio_unit().multiply(new BigDecimal(d.getCantidad()));
+            total = total.add(linea);
+            texto += d.getCantidad() + " x " + detalleDAO.getNombreItem(d) + "   ₡" + linea + "\n";
+        }
+        texto += "\nSubtotal: ₡" + total;
+
+        long minutos = minutosDeAtraso(comanda);
+        if (minutos > LIMITE_MINUTOS) {
+            texto += "\n\nEsta comanda lleva " + minutos + " minutos abierta (el límite son " + LIMITE_MINUTOS + ").";
+        }
+
+        JOptionPane.showMessageDialog(this, texto, "Detalle de la comanda", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /** Cierra la comanda seleccionada y deja la mesa libre otra vez. */
+    private void cerrarComanda() {
+        int fila = tblMisComandas.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la tabla.");
+            return;
+        }
+
+        Comanda comanda = misComandas.get(fila);
+        if ("cerrada".equals(comanda.getEstado())) {
+            JOptionPane.showMessageDialog(this, "Esa comanda ya está cerrada.");
+            return;
+        }
+
+        int respuesta = JOptionPane.showConfirmDialog(this,
+                "¿Cerrar la comanda #" + comanda.getId_comanda() + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        if (!comandaDAO.updateEstado(comanda.getId_comanda(), "cerrada")) {
+            JOptionPane.showMessageDialog(this, "No se pudo cerrar la comanda.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // dejo la mesa libre
+        for (Mesa m : mesaDAO.findAll()) {
+            if (m.getId_mesa() == comanda.getId_mesa()) {
+                m.setDisponible(1);
+                mesaDAO.update(m);
+            }
+        }
+
+        cargarSeccionYMesas();
+        cargarMisComandas();
+    }
+
+    // ------------------ reservas ------------------
+
+    /** Guarda una reserva nueva si hay campo a esa hora. */
+    private void guardarReserva() {
+        String nombre = txtNombreCliente.getText().trim();
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Escriba el nombre del cliente.");
+            return;
+        }
+
+        LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
+        if (fecha == null) {
+            JOptionPane.showMessageDialog(this, "La fecha debe ser aaaa-mm-dd (ejemplo 2026-07-28).");
+            return;
+        }
+
+        LocalTime hora = leerHora(txtHoraReserva.getText().trim());
+        if (hora == null) {
+            JOptionPane.showMessageDialog(this, "La hora debe ser hh:mm (ejemplo 19:30).");
+            return;
+        }
+
+        if (!reservaDAO.findDisponibilidad(fecha, hora)) {
+            JOptionPane.showMessageDialog(this, "Ya no hay campo a esa hora.");
+            return;
+        }
+
+        Reserva reserva = new Reserva();
+        reserva.setNombre_cliente(nombre);
+        reserva.setTelefono(txtTelefonoCliente.getText().trim());
+        reserva.setFecha_reserva(fecha);
+        reserva.setHora_reserva(hora);
+        reserva.setCantidad_pers((Integer) spnCantidadPersonas.getValue());
+        reserva.setIncluye_ninos(chkIncluyeNinos.isSelected());
+        reserva.setEstado("pendiente");
+
+        if (reservaDAO.insert(reserva)) {
+            JOptionPane.showMessageDialog(this, "Reserva guardada.");
+            limpiarReserva();
+            cargarReservas();
+        } else {
+            JOptionPane.showMessageDialog(this, "No se pudo guardar la reserva.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Pone en cancelada la reserva seleccionada. */
+    private void cancelarReserva() {
+        int fila = tblReservas.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una reserva de la tabla.");
+            return;
+        }
+
+        Reserva reserva = reservas.get(fila);
+        if ("cancelada".equals(reserva.getEstado())) {
+            JOptionPane.showMessageDialog(this, "Esa reserva ya está cancelada.");
+            return;
+        }
+
+        int respuesta = JOptionPane.showConfirmDialog(this,
+                "¿Cancelar la reserva de " + reserva.getNombre_cliente() + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        if (reservaDAO.updateEstado(reserva.getId_reserva(), "cancelada")) {
+            cargarReservas();
+        } else {
+            JOptionPane.showMessageDialog(this, "No se pudo cancelar la reserva.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Deja los campos de la reserva en blanco. */
+    private void limpiarReserva() {
+        txtNombreCliente.setText("");
+        txtTelefonoCliente.setText("");
+        txtFechaReserva.setText(LocalDate.now().toString());
+        txtHoraReserva.setText("19:00");
+        spnCantidadPersonas.setValue(2);
+        chkIncluyeNinos.setSelected(false);
+        IblDisponibilidad.setText("");
+        tblReservas.clearSelection();
+    }
+
+    // ------------------ ayudas ------------------
+
+    /** Minutos que lleva abierta una comanda (0 si ya está cerrada). */
+    private long minutosDeAtraso(Comanda comanda) {
+        if ("cerrada".equals(comanda.getEstado()) || comanda.getHora_orden() == null) {
+            return 0;
+        }
+        return Duration.between(comanda.getHora_orden(), LocalDateTime.now()).toMinutes();
+    }
+
+    /** Busca el número de mesa dentro de la lista, para no mostrar el id pelado. */
+    private String nombreMesa(List<Mesa> lista, int idMesa) {
+        for (Mesa m : lista) {
+            if (m.getId_mesa() == idMesa) {
+                return "Mesa " + m.getNumero_mesa();
+            }
+        }
+        return "-";
+    }
+
+    /** Convierte el texto a numero, devuelve -1 si no es un numero. */
+    private int leerEntero(String texto) {
+        try {
+            return Integer.parseInt(texto.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /** Convierte el texto a fecha, devuelve null si esta mal escrita. */
+    private LocalDate leerFecha(String texto) {
+        try {
+            return LocalDate.parse(texto);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Convierte el texto a hora, devuelve null si esta mal escrita. */
+    private LocalTime leerHora(String texto) {
+        try {
+            return LocalTime.parse(texto);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -475,7 +1037,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

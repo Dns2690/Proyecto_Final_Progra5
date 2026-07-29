@@ -86,6 +86,9 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Cerrar Sesi&#xf3;n"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCerrarSesionSalActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JTabbedPane" name="tabSalonero">
 
@@ -195,6 +198,9 @@
               </AuxValues>
             </Component>
             <Component class="javax.swing.JTextField" name="txtCodigoPlato">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtCodigoPlatoActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JTextField" name="txtNombrePlato">
               <Properties>
@@ -223,6 +229,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Agregar Plato"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAgregarPlatoActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel2">
               <Properties>
@@ -233,6 +242,9 @@
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="txtCodigoBebida">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtCodigoBebidaActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JTextField" name="txtNombreBebida">
               <Properties>
@@ -253,6 +265,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Agregar Bebida"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAgregarBebidaActionPerformed"/>
+              </Events>
             </Component>
             <Container class="javax.swing.JScrollPane" name="scrOrdenActual">
               <AuxValues>
@@ -264,7 +279,7 @@
                 <Component class="javax.swing.JTable" name="tblOrdenActual">
                   <Properties>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="3" rowCount="4">
+                      <Table columnCount="3" rowCount="0">
                         <Column editable="true" title="Tipo" type="java.lang.Object"/>
                         <Column editable="true" title="&#xcd;tem" type="java.lang.Object"/>
                         <Column editable="true" title="Cantidad" type="java.lang.Object"/>
@@ -303,6 +318,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Quitar &#xcd;tem"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnQuitarItemActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnGenerarComanda">
               <Properties>
@@ -311,6 +329,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Generar Comanda "/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGenerarComandaActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -380,7 +401,7 @@
                       <Font name="Segoe UI" size="14" style="1"/>
                     </Property>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="4" rowCount="4">
+                      <Table columnCount="4" rowCount="0">
                         <Column editable="true" title="N&#xfa;mero Comanda " type="java.lang.Object"/>
                         <Column editable="true" title="Mesa" type="java.lang.Object"/>
                         <Column editable="true" title="Hora Orden" type="java.lang.Object"/>
@@ -432,8 +453,8 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="lblNotificacion" min="-2" pref="71" max="-2" attributes="0"/>
-                          <EmptySpace pref="508" max="32767" attributes="0"/>
+                          <Component id="lblNotificacion" min="-2" pref="500" max="-2" attributes="0"/>
+                          <EmptySpace pref="79" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -464,6 +485,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Detalle Comanda "/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnVerDetalleComandaActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnCerrarComanda">
               <Properties>
@@ -472,6 +496,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Cerrar Comanda"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCerrarComandaActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnRefrescarComandas">
               <Properties>
@@ -480,6 +507,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Refrescar Comandas "/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRefrescarComandasActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -619,7 +649,7 @@
                 <Component class="javax.swing.JTable" name="tblReservas">
                   <Properties>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="6" rowCount="4">
+                      <Table columnCount="6" rowCount="0">
                         <Column editable="true" title="ID" type="java.lang.Object"/>
                         <Column editable="true" title="Cliente" type="java.lang.Object"/>
                         <Column editable="true" title="Fecha" type="java.lang.Object"/>
@@ -736,6 +766,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Disponibilidad "/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnConsultarDisponibilidadActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnGuardarReserva">
               <Properties>
@@ -744,6 +777,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Guardar Reserva"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGuardarReservaActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnCancelarReserva">
               <Properties>
@@ -752,6 +788,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Cancelar Reserva "/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCancelarReservaActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnLimpiarReserva">
               <Properties>
@@ -760,6 +799,9 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Limpiar Reserva"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLimpiarReservaActionPerformed"/>
+              </Events>
             </Component>
             <Container class="javax.swing.JPanel" name="pnlDisponibilidad">
 
@@ -768,8 +810,8 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
-                          <Component id="IblDisponibilidad" min="-2" pref="66" max="-2" attributes="0"/>
-                          <EmptySpace pref="166" max="32767" attributes="0"/>
+                          <Component id="IblDisponibilidad" min="-2" pref="200" max="-2" attributes="0"/>
+                          <EmptySpace pref="32" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>

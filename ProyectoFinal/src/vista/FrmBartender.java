@@ -4,19 +4,65 @@
  */
 package vista;
 
+import dao.BebidaDAO;
+import dao.ComandaDAO;
+import dao.DetalleComandaDAO;
+import dao.MesaDAO;
+import dao.ProcesoBarDAO;
+import dao.ProcesoCocinaDAO;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import model.Bebida;
+import model.Comanda;
+import model.DetalleComanda;
+import model.Mesa;
+import model.ProcesoBar;
+import model.ProcesoCocina;
+import session.SesionActual;
+
 /**
+ * Pantalla del bar: atiende las bebidas pendientes y puede crear sus propias comandas.
  *
  * @author valer
  */
 public class FrmBartender extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmBartender.class.getName());
+
+    // una comanda tiene 20 minutos para ser servida
+    private static final int LIMITE_MINUTOS = 20;
+
+    private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
+    private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
+    private final ComandaDAO comandaDAO = new ComandaDAO();
+    private final DetalleComandaDAO detalleDAO = new DetalleComandaDAO();
+    private final BebidaDAO bebidaDAO = new BebidaDAO();
+    private final MesaDAO mesaDAO = new MesaDAO();
+
+    private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private List<ProcesoBar> pendientes = new ArrayList<>();
 
     /**
      * Creates new form FrmBartender
      */
     public FrmBartender() {
         initComponents();
+        setLocationRelativeTo(null);
+        setTitle("Restaurante - Bar");
+
+        tblComandasBar.setDefaultEditor(Object.class, null);
+        tblDetalleComandaBar.setDefaultEditor(Object.class, null);
+
+        if (SesionActual.getUsuario() != null) {
+            IblBienvenidaBar.setText("Bar: " + SesionActual.getNombre());
+        }
+        cargarPendientes();
     }
 
     /**
@@ -46,13 +92,13 @@ public class FrmBartender extends javax.swing.JFrame {
 
         btnCerrarSesionBar.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesionBar.setText("Cerrar Sesion ");
+        btnCerrarSesionBar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCerrarSesionBarActionPerformed(evt);
+        });
 
         tblComandasBar.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Número Comandas ", "Origen ", "Mesa ", "Hora Recibida", "Estado "
@@ -62,10 +108,7 @@ public class FrmBartender extends javax.swing.JFrame {
 
         tblDetalleComandaBar.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
                 "Ítem", "Tipo", "Cantidad "
@@ -75,15 +118,27 @@ public class FrmBartender extends javax.swing.JFrame {
 
         btnVerDetalleBar.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerDetalleBar.setText("Detalle Bar");
+        btnVerDetalleBar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnVerDetalleBarActionPerformed(evt);
+        });
 
         btnCrearComandaBar.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCrearComandaBar.setText("Crear Comanda");
+        btnCrearComandaBar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnCrearComandaBarActionPerformed(evt);
+        });
 
         btnMarcarListaBar.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnMarcarListaBar.setText("Marcar Lista Bar");
+        btnMarcarListaBar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnMarcarListaBarActionPerformed(evt);
+        });
 
         btnRefrescarBar.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnRefrescarBar.setText("Refrescar Bar");
+        btnRefrescarBar.addActionListener((java.awt.event.ActionEvent evt) -> {
+            btnRefrescarBarActionPerformed(evt);
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -134,6 +189,199 @@ public class FrmBartender extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCerrarSesionBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionBarActionPerformed
+        SesionActual.cerrarSesion();
+        new FrmLogin().setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarSesionBarActionPerformed
+
+    private void btnRefrescarBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefrescarBarActionPerformed
+        cargarPendientes();
+    }//GEN-LAST:event_btnRefrescarBarActionPerformed
+
+    private void btnVerDetalleBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerDetalleBarActionPerformed
+        verDetalle();
+    }//GEN-LAST:event_btnVerDetalleBarActionPerformed
+
+    private void btnMarcarListaBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarcarListaBarActionPerformed
+        marcarLista();
+    }//GEN-LAST:event_btnMarcarListaBarActionPerformed
+
+    private void btnCrearComandaBarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearComandaBarActionPerformed
+        crearComandaBar();
+    }//GEN-LAST:event_btnCrearComandaBarActionPerformed
+
+    /** Trae las comandas con bebidas que el bar todavia no ha entregado. */
+    private void cargarPendientes() {
+        pendientes = barDAO.findPendientes();
+        List<Mesa> todasLasMesas = mesaDAO.findAll();
+
+        DefaultTableModel modelo = (DefaultTableModel) tblComandasBar.getModel();
+        modelo.setRowCount(0);
+
+        for (ProcesoBar p : pendientes) {
+            Comanda c = comandaDAO.findById(p.getId_comanda());
+            if (c == null) {
+                continue;
+            }
+            String hora = p.getHora_recibida() != null ? p.getHora_recibida().format(formatoHora) : "";
+            String estado = c.getEstado();
+            if (minutosEsperando(p) > LIMITE_MINUTOS) {
+                estado = estado + " (atrasada)";
+            }
+            modelo.addRow(new Object[]{c.getId_comanda(), c.getORIGEN(), nombreMesa(todasLasMesas, c.getId_mesa()), hora, estado});
+        }
+
+        ((DefaultTableModel) tblDetalleComandaBar.getModel()).setRowCount(0);
+    }
+
+    /** Muestra solo las bebidas de la comanda seleccionada. */
+    private void verDetalle() {
+        int fila = tblComandasBar.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+
+        DefaultTableModel modelo = (DefaultTableModel) tblDetalleComandaBar.getModel();
+        modelo.setRowCount(0);
+
+        List<DetalleComanda> detalles = detalleDAO.findByComanda(pendientes.get(fila).getId_comanda());
+        for (DetalleComanda d : detalles) {
+            if ("bebida".equals(d.getTipo_item())) {
+                modelo.addRow(new Object[]{detalleDAO.getNombreItem(d), d.getTipo_item(), d.getCantidad()});
+            }
+        }
+    }
+
+    /** Marca las bebidas como listas y revisa si la cocina ya terminó. */
+    private void marcarLista() {
+        int fila = tblComandasBar.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione una comanda de la lista.");
+            return;
+        }
+
+        ProcesoBar proceso = pendientes.get(fila);
+        proceso.setHora_lista(LocalDateTime.now());
+        proceso.setCodigo_bar(SesionActual.getCodigo());
+
+        if (!barDAO.update(proceso)) {
+            JOptionPane.showMessageDialog(this, "No se pudo marcar la comanda.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // la comanda queda lista solo si la cocina tambien terminó lo suyo
+        ProcesoCocina procesoCocina = cocinaDAO.findByComanda(proceso.getId_comanda());
+        if (procesoCocina == null || procesoCocina.getHora_lista() != null) {
+            comandaDAO.updateEstado(proceso.getId_comanda(), "lista");
+            JOptionPane.showMessageDialog(this, "Comanda #" + proceso.getId_comanda() + " lista para servir.");
+        } else {
+            comandaDAO.updateEstado(proceso.getId_comanda(), "en_proceso");
+            JOptionPane.showMessageDialog(this, "Bebidas listas. Falta que la cocina termine los platos.");
+        }
+
+        cargarPendientes();
+    }
+
+    /** Crea una comanda del bar (sin mesa) preguntando las bebidas una por una. */
+    private void crearComandaBar() {
+        List<DetalleComanda> nuevaOrden = new ArrayList<>();
+
+        // voy preguntando bebidas hasta que le den cancelar o digan que no
+        while (true) {
+            String codigo = JOptionPane.showInputDialog(this, "Código de la bebida:");
+            if (codigo == null) {
+                break;
+            }
+
+            Bebida bebida = bebidaDAO.findById(leerEntero(codigo));
+            if (bebida == null) {
+                JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
+                continue;
+            }
+
+            String cantidadTexto = JOptionPane.showInputDialog(this, "Cantidad de " + bebida.getNombre() + ":", "1");
+            if (cantidadTexto == null) {
+                continue;
+            }
+            int cantidad = leerEntero(cantidadTexto);
+            if (cantidad < 1) {
+                JOptionPane.showMessageDialog(this, "La cantidad debe ser un número mayor a cero.");
+                continue;
+            }
+
+            DetalleComanda detalle = new DetalleComanda();
+            detalle.setTipo_item("bebida");
+            detalle.setId_item(bebida.getId_bebida());
+            detalle.setCantidad(cantidad);
+            detalle.setPrecio_unit(bebida.getPrecio());
+            nuevaOrden.add(detalle);
+
+            int otra = JOptionPane.showConfirmDialog(this, "¿Agregar otra bebida?", "Comanda del bar", JOptionPane.YES_NO_OPTION);
+            if (otra != JOptionPane.YES_OPTION) {
+                break;
+            }
+        }
+
+        if (nuevaOrden.isEmpty()) {
+            return;
+        }
+
+        Comanda comanda = new Comanda();
+        comanda.setORIGEN("bar");
+        comanda.setCodigo_emp(SesionActual.getCodigo());
+        comanda.setId_mesa(0); // las comandas del bar no tienen mesa
+        comanda.setHora_orden(LocalDateTime.now());
+        comanda.setEstado("abierta");
+
+        int idComanda = comandaDAO.insertGetId(comanda);
+        if (idComanda <= 0) {
+            JOptionPane.showMessageDialog(this, "No se pudo crear la comanda.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        for (DetalleComanda d : nuevaOrden) {
+            d.setId_comanda(idComanda);
+            detalleDAO.insert(d);
+        }
+
+        ProcesoBar proceso = new ProcesoBar();
+        proceso.setId_comanda(idComanda);
+        proceso.setHora_recibida(LocalDateTime.now());
+        barDAO.insert(proceso);
+
+        JOptionPane.showMessageDialog(this, "Comanda #" + idComanda + " creada con " + nuevaOrden.size() + " bebida(s).");
+        cargarPendientes();
+    }
+
+    /** Minutos que lleva esperando el pedido en el bar. */
+    private long minutosEsperando(ProcesoBar proceso) {
+        if (proceso.getHora_recibida() == null) {
+            return 0;
+        }
+        return Duration.between(proceso.getHora_recibida(), LocalDateTime.now()).toMinutes();
+    }
+
+    /** Busca el número de mesa, para no mostrar el id pelado. */
+    private String nombreMesa(List<Mesa> lista, int idMesa) {
+        for (Mesa m : lista) {
+            if (m.getId_mesa() == idMesa) {
+                return "Mesa " + m.getNumero_mesa();
+            }
+        }
+        return "-";
+    }
+
+    /** Convierte el texto a numero, devuelve -1 si no es un numero. */
+    private int leerEntero(String texto) {
+        try {
+            return Integer.parseInt(texto.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -141,7 +389,7 @@ public class FrmBartender extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 import session.SesionActual;
 
 /**
- * Ventana de login. Segun el rol abre la pantalla que le toca.
+ * Login window. It opens the screen that matches the role of the user.
  *
  * @author valer
  */
@@ -21,7 +21,7 @@ public class FrmLogin extends javax.swing.JFrame {
      */
     public FrmLogin() {
         initComponents();
-        setLocationRelativeTo(null); // centra la ventana
+        setLocationRelativeTo(null); // center the window
         IblMensaje.setText(" ");
     }
 
@@ -152,16 +152,16 @@ public class FrmLogin extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSalirActionPerformed
 
     private void pwdContrasenaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pwdContrasenaActionPerformed
-        // si le dan enter en la contrasena es lo mismo que darle al boton
+        // pressing enter on the password does the same as clicking the button
         ingresar();
     }//GEN-LAST:event_pwdContrasenaActionPerformed
 
-    /** Valida los campos, hace el login y abre la ventana del rol. */
+    /** Validates the fields, performs the login and opens the screen of the role. */
     private void ingresar() {
         String usuario = txtUsuario.getText().trim();
         String contrasena = new String(pwdContrasena.getPassword());
 
-        // reviso que no dejen campos vacios
+        // make sure no field was left empty
         if (usuario.isEmpty() || contrasena.isEmpty()) {
             IblMensaje.setText("Debe llenar los dos campos");
             return;
@@ -184,7 +184,7 @@ public class FrmLogin extends javax.swing.JFrame {
         abrirVentana();
     }
 
-    /** Abre el JFrame que corresponde segun el rol de la sesion. */
+    /** Opens the JFrame that matches the role of the current session. */
     private void abrirVentana() {
         javax.swing.JFrame ventana;
 
@@ -201,7 +201,7 @@ public class FrmLogin extends javax.swing.JFrame {
             } else if ("CAJ".equals(prefijo)) {
                 ventana = new FrmCajero();
             } else {
-                // por si el tipo de usuario no tiene pantalla todavia
+                // in case that user type has no screen yet
                 JOptionPane.showMessageDialog(this,
                         "El rol " + SesionActual.getRol() + " no tiene pantalla asignada.",
                         "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -212,7 +212,7 @@ public class FrmLogin extends javax.swing.JFrame {
 
         ventana.setLocationRelativeTo(null);
         ventana.setVisible(true);
-        this.dispose(); // cierro el login
+        this.dispose(); // close the login window
     }
 
     /**

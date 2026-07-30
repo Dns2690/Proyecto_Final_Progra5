@@ -10,13 +10,13 @@ import java.util.List;
 import model.DetalleFactura;
 
 /**
- * DAO para la entidad DetalleFactura, con operaciones CRUD y consultas por factura.
+ * DAO for the DetalleFactura entity, with CRUD operations and queries by invoice.
  */
 public class DetalleFacturaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Ligar un detalle de comanda a una factura)
+    // 1. CREATE (link one order detail to an invoice)
     public boolean insert(DetalleFactura detalle) {
         String sql = "INSERT INTO detalle_factura (id_factura, id_detalle) VALUES (?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -32,7 +32,7 @@ public class DetalleFacturaDAO {
         }
     }
 
-    // 2. UPDATE (Reasignar un detalle a otra factura)
+    // 2. UPDATE (move one detail to a different invoice)
     public boolean update(DetalleFactura detalle) {
         String sql = "UPDATE detalle_factura SET id_factura = ?, id_detalle = ? WHERE id_det_fac = ?";
         try (Connection con = conexionDB.getConexion();
@@ -49,7 +49,7 @@ public class DetalleFacturaDAO {
         }
     }
 
-    // 3. DELETE (Eliminar un vínculo por ID)
+    // 3. DELETE (remove one link by ID)
     public boolean delete(int idDetFac) {
         String sql = "DELETE FROM detalle_factura WHERE id_det_fac = ?";
         try (Connection con = conexionDB.getConexion();
@@ -63,7 +63,7 @@ public class DetalleFacturaDAO {
         }
     }
 
-    // 4. DELETE por factura (al anular una factura se sueltan sus detalles)
+    // 4. DELETE by invoice (voiding an invoice releases its details)
     public boolean deleteByFactura(int idFactura) {
         String sql = "DELETE FROM detalle_factura WHERE id_factura = ?";
         try (Connection con = conexionDB.getConexion();
@@ -77,7 +77,7 @@ public class DetalleFacturaDAO {
         }
     }
 
-    // 5. READ ALL (Listar todos los vínculos)
+    // 5. READ ALL (list every link)
     public List<DetalleFactura> findAll() {
         String sql = "SELECT * FROM detalle_factura";
         List<DetalleFactura> lista = new ArrayList<>();
@@ -94,7 +94,7 @@ public class DetalleFacturaDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar un vínculo específico)
+    // 6. READ BY ID (find one link)
     public DetalleFactura findById(int idDetFac) {
         String sql = "SELECT * FROM detalle_factura WHERE id_det_fac = ?";
         try (Connection con = conexionDB.getConexion();
@@ -112,7 +112,7 @@ public class DetalleFacturaDAO {
         return null;
     }
 
-    // 7. READ por factura (los detalles de comanda que cobra esa factura)
+    // 7. READ by invoice (the order details charged by that invoice)
     public List<DetalleFactura> findByFactura(int idFactura) {
         String sql = "SELECT * FROM detalle_factura WHERE id_factura = ?";
         List<DetalleFactura> lista = new ArrayList<>();
@@ -131,7 +131,7 @@ public class DetalleFacturaDAO {
         return lista;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo DetalleFactura. */
+    /** Maps the current ResultSet row into a DetalleFactura object. */
     private DetalleFactura mapRow(ResultSet rs) throws SQLException {
         DetalleFactura d = new DetalleFactura();
         d.setId_det_fac(rs.getInt("id_det_fac"));

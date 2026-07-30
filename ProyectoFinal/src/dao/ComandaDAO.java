@@ -13,21 +13,21 @@ import java.util.List;
 import model.Comanda;
 
 /**
- * DAO para la entidad Comanda, con operaciones CRUD y consultas por mesa, empleado, origen y estado.
+ * DAO for the Comanda entity, with CRUD operations and queries by table, employee, origin and status.
  */
 public class ComandaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva comanda)
+    // 1. CREATE (insert a new order)
     public boolean insert(Comanda comanda) {
         return insertGetId(comanda) > 0;
     }
 
     /**
-     * Inserta una nueva comanda y retorna el ID generado. Retorna -1 si falla.
-     * @param comanda objeto Comanda a insertar
-     * @return ID de la comanda insertada, o -1 si hubo un error
+     * Inserts a new order and returns the generated ID, or -1 when it fails.
+     * @param comanda the Comanda object to insert
+     * @return the ID of the inserted order, or -1 on error
      */
     public int insertGetId(Comanda comanda) {
         String sql = "INSERT INTO comanda (ORIGEN, codigo_emp, id_mesa, hora_orden, hora_generada, estado) VALUES (?, ?, ?, ?, ?, ?)";
@@ -39,7 +39,7 @@ public class ComandaDAO {
             if (comanda.getId_mesa() > 0) {
                 ps.setInt(3, comanda.getId_mesa());
             } else {
-                ps.setNull(3, Types.INTEGER); // comandas de bar no tienen mesa
+                ps.setNull(3, Types.INTEGER); // bar orders have no table
             }
             ps.setTimestamp(4, comanda.getHora_orden() != null
                     ? Timestamp.valueOf(comanda.getHora_orden())
@@ -62,7 +62,7 @@ public class ComandaDAO {
         return -1;
     }
 
-    // 2. UPDATE (Modificar comanda existente)
+    // 2. UPDATE (change an existing order)
     public boolean update(Comanda comanda) {
         String sql = "UPDATE comanda SET ORIGEN = ?, codigo_emp = ?, id_mesa = ?, hora_orden = ?, hora_generada = ?, estado = ? WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -91,7 +91,7 @@ public class ComandaDAO {
         }
     }
 
-    // 3. UPDATE estado (abierta / en_proceso / lista / cerrada)
+    // 3. UPDATE status (abierta / en_proceso / lista / cerrada)
     public boolean updateEstado(int idComanda, String nuevoEstado) {
         String sql = "UPDATE comanda SET estado = ? WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -106,7 +106,7 @@ public class ComandaDAO {
         }
     }
 
-    // 4. DELETE (Eliminar comanda por ID)
+    // 4. DELETE (remove an order by ID)
     public boolean delete(int idComanda) {
         String sql = "DELETE FROM comanda WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -120,7 +120,7 @@ public class ComandaDAO {
         }
     }
 
-    // 5. READ ALL (Listar todas las comandas)
+    // 5. READ ALL (list every order)
     public List<Comanda> findAll() {
         String sql = "SELECT * FROM comanda";
         List<Comanda> lista = new ArrayList<>();
@@ -137,7 +137,7 @@ public class ComandaDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar una comanda específica)
+    // 6. READ BY ID (find one order)
     public Comanda findById(int idComanda) {
         String sql = "SELECT * FROM comanda WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -155,7 +155,7 @@ public class ComandaDAO {
         return null;
     }
 
-    // 7. READ por mesa (comandas de una mesa)
+    // 7. READ by table (orders of one table)
     public List<Comanda> findByMesa(int idMesa) {
         String sql = "SELECT * FROM comanda WHERE id_mesa = ?";
         List<Comanda> lista = new ArrayList<>();
@@ -174,7 +174,7 @@ public class ComandaDAO {
         return lista;
     }
 
-    // 8. READ por empleado (código de empleado, ej. SAL001)
+    // 8. READ by employee (employee code, e.g. SAL001)
     public List<Comanda> findByEmpleado(String codigoEmp) {
         String sql = "SELECT * FROM comanda WHERE codigo_emp = ?";
         List<Comanda> lista = new ArrayList<>();
@@ -193,7 +193,7 @@ public class ComandaDAO {
         return lista;
     }
 
-    // 9. READ por origen y estado (ej. pendientes de cocina o de bar)
+    // 9. READ by origin and status (e.g. the ones pending in the kitchen or the bar)
     public List<Comanda> findByOrigenEstado(String origen, String estado) {
         String sql = "SELECT * FROM comanda WHERE ORIGEN = ? AND estado = ?";
         List<Comanda> lista = new ArrayList<>();
@@ -213,13 +213,13 @@ public class ComandaDAO {
         return lista;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo Comanda. */
+    /** Maps the current ResultSet row into a Comanda object. */
     private Comanda mapRow(ResultSet rs) throws SQLException {
         Comanda c = new Comanda();
         c.setId_comanda(rs.getInt("id_comanda"));
         c.setORIGEN(rs.getString("ORIGEN"));
         c.setCodigo_emp(rs.getString("codigo_emp"));
-        c.setId_mesa(rs.getInt("id_mesa")); // 0 cuando es NULL (comanda de bar)
+        c.setId_mesa(rs.getInt("id_mesa")); // 0 when it is NULL (bar order)
         Timestamp horaOrden = rs.getTimestamp("hora_orden");
         c.setHora_orden(horaOrden != null ? horaOrden.toLocalDateTime() : null);
         Timestamp horaGenerada = rs.getTimestamp("hora_generada");

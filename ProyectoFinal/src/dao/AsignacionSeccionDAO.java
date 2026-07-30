@@ -18,13 +18,13 @@ import model.AsignacionSeccion;
 import model.SeccionSalon;
 
 /**
- * DAO para la entidad AsignacionSeccion, con operaciones CRUD y generación de rotación diaria.
+ * DAO for the AsignacionSeccion entity, with CRUD operations and daily rotation generation.
  */
 public class AsignacionSeccionDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar asignación; la BD rechaza duplicados salonero+fecha)
+    // 1. CREATE (insert an assignment; the database rejects a duplicated waiter+date)
     public boolean insert(AsignacionSeccion asignacion) {
         String sql = "INSERT INTO asignacion_seccion (codigo_sal, id_seccion, fecha) VALUES (?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -41,7 +41,7 @@ public class AsignacionSeccionDAO {
         }
     }
 
-    // 2. UPDATE (Modificar asignación existente)
+    // 2. UPDATE (change an existing assignment)
     public boolean update(AsignacionSeccion asignacion) {
         String sql = "UPDATE asignacion_seccion SET codigo_sal = ?, id_seccion = ?, fecha = ? WHERE id_asignacion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -59,7 +59,7 @@ public class AsignacionSeccionDAO {
         }
     }
 
-    // 3. DELETE (Eliminar asignación por ID)
+    // 3. DELETE (remove an assignment by ID)
     public boolean delete(int idAsignacion) {
         String sql = "DELETE FROM asignacion_seccion WHERE id_asignacion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -73,7 +73,7 @@ public class AsignacionSeccionDAO {
         }
     }
 
-    // 4. DELETE por fecha (para regenerar la rotación de un día)
+    // 4. DELETE by date (used to rebuild the rotation of a given day)
     public boolean deleteByFecha(LocalDate fecha) {
         String sql = "DELETE FROM asignacion_seccion WHERE fecha = ?";
         try (Connection con = conexionDB.getConexion();
@@ -87,7 +87,7 @@ public class AsignacionSeccionDAO {
         }
     }
 
-    // 5. READ ALL (Listar todas las asignaciones)
+    // 5. READ ALL (list every assignment)
     public List<AsignacionSeccion> findAll() {
         String sql = "SELECT * FROM asignacion_seccion";
         List<AsignacionSeccion> lista = new ArrayList<>();
@@ -104,7 +104,7 @@ public class AsignacionSeccionDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar una asignación específica)
+    // 6. READ BY ID (find one assignment)
     public AsignacionSeccion findById(int idAsignacion) {
         String sql = "SELECT * FROM asignacion_seccion WHERE id_asignacion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -122,7 +122,7 @@ public class AsignacionSeccionDAO {
         return null;
     }
 
-    // 7. READ por fecha (la planilla de secciones de un día)
+    // 7. READ by date (the section roster for one day)
     public List<AsignacionSeccion> findByFecha(LocalDate fecha) {
         String sql = "SELECT * FROM asignacion_seccion WHERE fecha = ? ORDER BY codigo_sal";
         List<AsignacionSeccion> lista = new ArrayList<>();
@@ -141,7 +141,7 @@ public class AsignacionSeccionDAO {
         return lista;
     }
 
-    // 8. READ la sección de un salonero en una fecha (para la vista del salonero)
+    // 8. READ the section of a waiter on a date (used by the waiter screen)
     public AsignacionSeccion findBySaloneroFecha(String codigoSal, LocalDate fecha) {
         String sql = "SELECT * FROM asignacion_seccion WHERE codigo_sal = ? AND fecha = ?";
         try (Connection con = conexionDB.getConexion();
@@ -161,10 +161,10 @@ public class AsignacionSeccionDAO {
     }
 
     /**
-     * Genera la rotación diaria de secciones para todos los saloneros activos en la fecha dada.
-     * Si ya existen asignaciones para esa fecha, no se regeneran y se retornan las existentes.
-     * @param fecha fecha para la cual generar la rotación
-     * @return lista de asignaciones generadas o existentes para la fecha
+     * Builds the daily section rotation for every active waiter on the given date.
+     * If that date already has assignments they are kept and returned as they are.
+     * @param fecha date the rotation is generated for
+     * @return the list of assignments created, or the ones that already existed
      */
     public List<AsignacionSeccion> generarRotacionDiaria(LocalDate fecha) {
         List<AsignacionSeccion> existentes = findByFecha(fecha);
@@ -181,13 +181,13 @@ public class AsignacionSeccionDAO {
             return new ArrayList<>();
         }
 
-        // Última asignación previa de cada salonero (día asignado más reciente antes de la fecha)
+        // Latest previous assignment of each waiter (most recent assigned day before this date)
         Map<String, Integer> seccionAnterior = findUltimaSeccionPorSalonero(fecha);
 
         List<AsignacionSeccion> generadas = new ArrayList<>();
         Set<Integer> usadas = new HashSet<>();
 
-        // Primero rotan los que ya tenían sección: pasan a la siguiente
+        // The ones that already had a section rotate first: they move to the next one
         for (String codigoSal : saloneros) {
             Integer previa = seccionAnterior.get(codigoSal);
             if (previa == null) {
@@ -205,7 +205,7 @@ public class AsignacionSeccionDAO {
             usadas.add(nueva);
         }
 
-        // Los saloneros nuevos toman las secciones que quedaron libres, en orden
+        // The new waiters take the sections that were left free, in order
         for (String codigoSal : saloneros) {
             if (seccionAnterior.containsKey(codigoSal)) {
                 continue;

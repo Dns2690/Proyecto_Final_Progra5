@@ -13,7 +13,7 @@ public class BebidaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva bebida)
+    // 1. CREATE (insert a new drink)
     public boolean insert(Bebida bebida) {
         String sql = "INSERT INTO bebida (nombre, id_categoria, descripcion, precio, activo) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -32,7 +32,7 @@ public class BebidaDAO {
         }
     }
 
-    // 2. UPDATE (Modificar bebida existente)
+    // 2. UPDATE (change an existing drink)
     public boolean update(Bebida bebida) {
         String sql = "UPDATE bebida SET nombre = ?, id_categoria = ?, descripcion = ?, precio = ?, activo = ? WHERE id_bebida = ?";
         try (Connection con = conexionDB.getConexion();
@@ -52,7 +52,7 @@ public class BebidaDAO {
         }
     }
 
-    // 3. DELETE (Eliminar bebida por ID)
+    // 3. DELETE (remove a drink by ID)
     public boolean delete(int idBebida) {
         String sql = "DELETE FROM bebida WHERE id_bebida = ?";
         try (Connection con = conexionDB.getConexion();
@@ -66,7 +66,7 @@ public class BebidaDAO {
         }
     }
 
-    // 4. READ ALL (Listar todas las bebidas)
+    // 4. READ ALL (list every drink)
     public List<Bebida> findAll() {
         String sql = "SELECT * FROM bebida";
         List<Bebida> lista = new ArrayList<>();
@@ -90,7 +90,7 @@ public class BebidaDAO {
         return lista;
     }
 
-    // 5. READ BY ID (Buscar una bebida específica)
+    // 5. READ BY ID (find one drink)
     public Bebida findById(int idBebida) {
         String sql = "SELECT * FROM bebida WHERE id_bebida = ?";
         try (Connection con = conexionDB.getConexion();

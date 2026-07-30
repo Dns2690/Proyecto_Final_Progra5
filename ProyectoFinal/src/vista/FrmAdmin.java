@@ -53,10 +53,10 @@ public class FrmAdmin extends javax.swing.JFrame {
     private final AsignacionSeccionDAO asignacionDAO = new AsignacionSeccionDAO();
     private final ReporteDAO reporteDAO = new ReporteDAO();
 
-    // me sirve para que los combos no disparen sus eventos mientras los estoy llenando
+    // keeps the combo boxes from firing their events while they are being filled
     private boolean cargandoCombos = false;
 
-    // guardo las listas para saber a que fila de la tabla corresponde cada registro
+    // the lists are kept so each table row can be matched back to its record
     private List<CategoriaComida> catComidas = new ArrayList<>();
     private List<CategoriaBebida> catBebidas = new ArrayList<>();
     private List<Comida> comidas = new ArrayList<>();
@@ -1316,7 +1316,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_btnCerrarSesionActionPerformed
 
-    // ================= CATEGORIAS DE COMIDA =================
+    // ================= FOOD CATEGORIES =================
 
     private void tblCatComidaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCatComidaMouseClicked
         int fila = tblCatComida.getSelectedRow();
@@ -1388,7 +1388,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblCatComida.clearSelection();
     }//GEN-LAST:event_btnLimpiarCatComidaActionPerformed
 
-    // ================= CATEGORIAS DE BEBIDA =================
+    // ================= DRINK CATEGORIES =================
 
     private void tblCatBebidaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblCatBebidaMouseClicked
         int fila = tblCatBebida.getSelectedRow();
@@ -1460,7 +1460,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblCatBebida.clearSelection();
     }//GEN-LAST:event_btnLimpiarCatBebidaActionPerformed
 
-    // ================= COMIDAS =================
+    // ================= DISHES =================
 
     private void tblComidasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblComidasMouseClicked
         int fila = tblComidas.getSelectedRow();
@@ -1472,7 +1472,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         txtDescripcionComida.setText(c.getDescripcion());
         txtPrecioComida.setText(c.getPrecio() != null ? c.getPrecio().toString() : "");
         chkActivoComida.setSelected(c.getActivo() == 1);
-        // dejo seleccionada la categoria que le corresponde
+        // select the category this record belongs to
         for (int i = 0; i < catComidas.size(); i++) {
             if (catComidas.get(i).getId_categoria() == c.getId_categoria()) {
                 cmbCategoriaComida.setSelectedIndex(i);
@@ -1540,7 +1540,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblComidas.clearSelection();
     }//GEN-LAST:event_btnLimpiarComidaActionPerformed
 
-    // ================= BEBIDAS =================
+    // ================= DRINKS =================
 
     private void tblBebidasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblBebidasMouseClicked
         int fila = tblBebidas.getSelectedRow();
@@ -1619,7 +1619,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblBebidas.clearSelection();
     }//GEN-LAST:event_btnLimpiarBebidaActionPerformed
 
-    // ================= TIPOS DE USUARIO =================
+    // ================= USER TYPES =================
 
     private void tblTiposMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTiposMouseClicked
         int fila = tblTipos.getSelectedRow();
@@ -1670,7 +1670,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
         TipoUsuario tipo = tipos.get(fila);
 
-        // no lo dejo borrar si hay empleados de ese tipo
+        // it cannot be deleted while there are employees of that type
         int cuantos = 0;
         for (Usuario u : usuarios) {
             if (u.getId_tipo() == tipo.getId_tipo()) {
@@ -1700,7 +1700,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblTipos.clearSelection();
     }//GEN-LAST:event_btnLimpiarTipoActionPerformed
 
-    // ================= USUARIOS (EMPLEADOS) =================
+    // ================= USERS (EMPLOYEES) =================
 
     private void tblUsuariosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblUsuariosMouseClicked
         int fila = tblUsuarios.getSelectedRow();
@@ -1712,7 +1712,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         txtNombreUsu.setText(u.getNombre());
         chkActivoUsu.setSelected(u.getActivo() == 1);
         pwdContrasenaUsu.setText("");
-        // el codigo ya existe, saco de ahi los 3 numeros de la cedula
+        // the code already exists, so the 3 digits of the id card are taken from it
         txtCedulaUsu.setText(u.getCodigo().length() > 3 ? u.getCodigo().substring(3) : "");
         for (int i = 0; i < tipos.size(); i++) {
             if (tipos.get(i).getId_tipo() == u.getId_tipo()) {
@@ -1755,7 +1755,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         Usuario u = new Usuario();
         u.setCodigo(codigo);
         u.setNombre(txtNombreUsu.getText().trim());
-        u.setContrasena(contrasena); // el DAO le mete el MD5
+        u.setContrasena(contrasena); // the DAO applies the MD5 hash
         u.setId_tipo(tipos.get(cmbTipoUsu.getSelectedIndex()).getId_tipo());
         u.setActivo(chkActivoUsu.isSelected() ? 1 : 0);
 
@@ -1778,7 +1778,7 @@ public class FrmAdmin extends javax.swing.JFrame {
             aviso("Escriba el nombre del empleado.");
             return;
         }
-        // el codigo no se cambia, es la llave de la tabla
+        // the code is never changed, it is the primary key of the table
         Usuario u = usuarios.get(fila);
         u.setNombre(txtNombreUsu.getText().trim());
         u.setId_tipo(tipos.get(cmbTipoUsu.getSelectedIndex()).getId_tipo());
@@ -1841,7 +1841,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblUsuarios.clearSelection();
     }//GEN-LAST:event_btnLimpiarUsuActionPerformed
 
-    // ================= ROTACION DE SECCIONES =================
+    // ================= SECTION ROTATION =================
 
     private void tblRotacionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblRotacionMouseClicked
         int fila = tblRotacion.getSelectedRow();
@@ -1873,7 +1873,7 @@ public class FrmAdmin extends javax.swing.JFrame {
             return;
         }
 
-        // si ese dia todavia no tiene rotacion, ofrezco armarla completa
+        // when that day has no rotation yet, offer to build the whole one
         if (asignacionDAO.findByFecha(fecha).isEmpty()) {
             int r = JOptionPane.showConfirmDialog(this,
                     "Ese día no tiene rotación.\n¿Generarla automáticamente para todos los saloneros?\n"
@@ -1933,7 +1933,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         generarReporte();
     }//GEN-LAST:event_btnGenerarReporteActionPerformed
 
-    /** Arma el grafico de barras del reporte que escogieron en el combo. */
+    /** Builds the bar chart of the report chosen in the combo box. */
     private void generarReporte() {
         int cual = cmbTipoReporte.getSelectedIndex();
         String titulo = String.valueOf(cmbTipoReporte.getSelectedItem());
@@ -1976,9 +1976,9 @@ public class FrmAdmin extends javax.swing.JFrame {
         pnlGrafico.repaint();
     }
 
-    // ================= carga del personal y la rotacion =================
+    // ================= staff and rotation loading =================
 
-    /** Vuelve a leer los tipos de usuario y los empleados. */
+    /** Reloads the user types and the employees. */
     private void cargarPersonal() {
         tipos = tipoDAO.findAll();
         usuarios = usuarioDAO.findAll();
@@ -2003,11 +2003,11 @@ public class FrmAdmin extends javax.swing.JFrame {
         cargarRotaciones();
     }
 
-    /** Llena la tabla de rotaciones y los combos de esa pestaña. */
+    /** Fills the rotation table and the combo boxes of that tab. */
     private void cargarRotaciones() {
         rotaciones = asignacionDAO.findAll();
 
-        // solo los saloneros activos pueden tener seccion
+        // only active waiters can be given a section
         saloneros = new ArrayList<>();
         for (Usuario u : usuarios) {
             if (u.getActivo() == 1 && "SAL".equals(prefijoTipo(u.getId_tipo()))) {
@@ -2034,12 +2034,12 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
     }
 
-    /** Arma el codigo del empleado: prefijo del tipo + los ultimos 3 numeros de la cedula. */
+    /** Builds the employee code: type prefix plus the last 3 digits of the id card. */
     private void armarCodigo() {
         if (cargandoCombos || cmbTipoUsu.getSelectedIndex() < 0) {
             return;
         }
-        // me quedo solo con los numeros de la cedula
+        // keep only the digits of the id card
         String soloNumeros = "";
         for (char c : txtCedulaUsu.getText().toCharArray()) {
             if (Character.isDigit(c)) {
@@ -2054,7 +2054,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         txtCodigoUsu.setText(tipos.get(cmbTipoUsu.getSelectedIndex()).getPrefijo() + ultimos3);
     }
 
-    /** Toma lo que hay en el formulario de tipos y lo valida. */
+    /** Reads the user type form and validates it. */
     private TipoUsuario leerFormularioTipo(TipoUsuario tipo, int idQueIgnoro) {
         String nombre = txtNombreTipo.getText().trim();
         String prefijo = txtPrefijoTipo.getText().trim().toUpperCase();
@@ -2077,7 +2077,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return tipo;
     }
 
-    /** Busca el nombre del tipo para la tabla de empleados. */
+    /** Finds the type name for the employees table. */
     private String nombreTipo(int idTipo) {
         for (TipoUsuario t : tipos) {
             if (t.getId_tipo() == idTipo) {
@@ -2087,7 +2087,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Busca el prefijo del tipo (SAL, COS, BAR, CAJ). */
+    /** Finds the prefix of the user type (SAL, COS, BAR, CAJ). */
     private String prefijoTipo(int idTipo) {
         for (TipoUsuario t : tipos) {
             if (t.getId_tipo() == idTipo) {
@@ -2097,7 +2097,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return "";
     }
 
-    /** Busca el nombre del salonero para la tabla de rotaciones. */
+    /** Finds the waiter name for the rotation table. */
     private String nombreSalonero(String codigo) {
         for (Usuario u : usuarios) {
             if (u.getCodigo().equals(codigo)) {
@@ -2107,7 +2107,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return codigo;
     }
 
-    /** Convierte el texto a fecha, devuelve null si esta mal escrita. */
+    /** Converts the text into a date, or null when it is not well written. */
     private LocalDate leerFecha(String texto) {
         try {
             return LocalDate.parse(texto.trim());
@@ -2116,7 +2116,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
     }
 
-    // ================= SECCIONES DEL SALON =================
+    // ================= DINING ROOM SECTIONS =================
 
     private void tblSeccionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSeccionesMouseClicked
         int fila = tblSecciones.getSelectedRow();
@@ -2172,7 +2172,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
         SeccionSalon sec = secciones.get(fila);
 
-        // no la dejo borrar si todavia tiene mesas
+        // it cannot be deleted while it still has tables
         int cuantasMesas = 0;
         for (Mesa m : mesas) {
             if (m.getId_seccion() == sec.getId_seccion()) {
@@ -2201,7 +2201,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblSecciones.clearSelection();
     }//GEN-LAST:event_btnLimpiarSecActionPerformed
 
-    // ================= MESAS =================
+    // ================= TABLES =================
 
     private void tblMesasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMesasMouseClicked
         int fila = tblMesas.getSelectedRow();
@@ -2300,7 +2300,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         tblMesas.clearSelection();
     }//GEN-LAST:event_btnLimpiarMesaActionPerformed
 
-    /** Vuelve a leer las secciones y las mesas de la base. */
+    /** Reloads the sections and the tables from the database. */
     private void cargarSalon() {
         secciones = seccionDAO.findAll();
         mesas = mesaDAO.findAll();
@@ -2321,7 +2321,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
     }
 
-    /** Revisa si ya hay otra mesa con ese numero (idMesa 0 cuando es una mesa nueva). */
+    /** Checks whether another table already uses that number; idMesa is 0 for a new table. */
     private boolean numeroRepetido(int numero, int idMesa) {
         for (Mesa m : mesas) {
             if (m.getNumero_mesa() == numero && m.getId_mesa() != idMesa) {
@@ -2331,7 +2331,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return false;
     }
 
-    /** Busca el nombre de la seccion para mostrarlo en la tabla de mesas. */
+    /** Finds the section name to show it in the tables grid. */
     private String nombreSeccion(int idSeccion) {
         for (SeccionSalon sec : secciones) {
             if (sec.getId_seccion() == idSeccion) {
@@ -2341,16 +2341,16 @@ public class FrmAdmin extends javax.swing.JFrame {
         return "-";
     }
 
-    // ================= carga de los catalogos =================
+    // ================= catalog loading =================
 
-    /** Vuelve a leer de la base las categorias, los platos y las bebidas. */
+    /** Reloads the categories, the dishes and the drinks from the database. */
     private void cargarCatalogos() {
         catComidas = catComidaDAO.findAll();
         catBebidas = catBebidaDAO.findAll();
         comidas = comidaDAO.findAll();
         bebidas = bebidaDAO.findAll();
 
-        // tabla de categorias de comida
+        // food categories table
         DefaultTableModel mCatCom = (DefaultTableModel) tblCatComida.getModel();
         mCatCom.setRowCount(0);
         cmbCategoriaComida.removeAllItems();
@@ -2359,7 +2359,7 @@ public class FrmAdmin extends javax.swing.JFrame {
             cmbCategoriaComida.addItem(cat.getNombre());
         }
 
-        // tabla de categorias de bebida
+        // drink categories table
         DefaultTableModel mCatBeb = (DefaultTableModel) tblCatBebida.getModel();
         mCatBeb.setRowCount(0);
         cmbCategoriaBebida.removeAllItems();
@@ -2368,7 +2368,7 @@ public class FrmAdmin extends javax.swing.JFrame {
             cmbCategoriaBebida.addItem(cat.getNombre());
         }
 
-        // tabla de comidas
+        // dishes table
         DefaultTableModel mCom = (DefaultTableModel) tblComidas.getModel();
         mCom.setRowCount(0);
         for (Comida c : comidas) {
@@ -2376,7 +2376,7 @@ public class FrmAdmin extends javax.swing.JFrame {
                 nombreCategoriaComida(c.getId_categoria()), c.getPrecio(), c.getActivo() == 1 ? "Sí" : "No"});
         }
 
-        // tabla de bebidas
+        // drinks table
         DefaultTableModel mBeb = (DefaultTableModel) tblBebidas.getModel();
         mBeb.setRowCount(0);
         for (Bebida b : bebidas) {
@@ -2385,7 +2385,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         }
     }
 
-    /** Toma lo que hay en el formulario de comidas y lo mete en el objeto. */
+    /** Reads the dish form and copies it into the object. */
     private Comida leerFormularioComida(Comida c) {
         String nombre = txtNombreComida.getText().trim();
         if (nombre.isEmpty()) {
@@ -2410,7 +2410,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return c;
     }
 
-    /** Toma lo que hay en el formulario de bebidas y lo mete en el objeto. */
+    /** Reads the drink form and copies it into the object. */
     private Bebida leerFormularioBebida(Bebida b) {
         String nombre = txtNombreBebida.getText().trim();
         if (nombre.isEmpty()) {
@@ -2435,7 +2435,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return b;
     }
 
-    /** Busca el nombre de la categoria para mostrarlo en la tabla. */
+    /** Finds the category name to show it in the table. */
     private String nombreCategoriaComida(int idCategoria) {
         for (CategoriaComida cat : catComidas) {
             if (cat.getId_categoria() == idCategoria) {
@@ -2445,7 +2445,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Busca el nombre de la categoria para mostrarlo en la tabla. */
+    /** Finds the category name to show it in the table. */
     private String nombreCategoriaBebida(int idCategoria) {
         for (CategoriaBebida cat : catBebidas) {
             if (cat.getId_categoria() == idCategoria) {
@@ -2455,7 +2455,7 @@ public class FrmAdmin extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Convierte el texto a precio, devuelve null si no sirve. */
+    /** Converts the text into a price, or null when it is not valid. */
     private BigDecimal leerPrecio(String texto) {
         try {
             BigDecimal precio = new BigDecimal(texto.trim());

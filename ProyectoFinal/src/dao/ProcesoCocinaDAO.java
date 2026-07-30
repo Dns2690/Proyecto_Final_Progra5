@@ -12,13 +12,13 @@ import java.util.List;
 import model.ProcesoCocina;
 
 /**
- * DAO  para la entidad ProcesoCocina, con operaciones CRUD y consultas por comanda.
+ * DAO for the ProcesoCocina entity, with CRUD operations and queries by order.
  */
 public class ProcesoCocinaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (La cocina recibe una comanda)
+    // 1. CREATE (the kitchen receives an order)
     public boolean insert(ProcesoCocina proceso) {
         String sql = "INSERT INTO proceso_cocina (id_comanda, hora_recibida, hora_lista, codigo_cos) VALUES (?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -40,7 +40,7 @@ public class ProcesoCocinaDAO {
         }
     }
 
-    // 2. UPDATE (Modificar proceso existente)
+    // 2. UPDATE (change an existing process)
     public boolean update(ProcesoCocina proceso) {
         String sql = "UPDATE proceso_cocina SET id_comanda = ?, hora_recibida = ?, hora_lista = ?, codigo_cos = ? WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -63,7 +63,7 @@ public class ProcesoCocinaDAO {
         }
     }
 
-    // 3. UPDATE hora_lista (Marcar comanda como lista en cocina)
+    // 3. UPDATE hora_lista (mark the order as ready in the kitchen)
     public boolean updateHoraLista(int idProceso, LocalDateTime horaLista) {
         String sql = "UPDATE proceso_cocina SET hora_lista = ? WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -80,7 +80,7 @@ public class ProcesoCocinaDAO {
         }
     }
 
-    // 4. DELETE (Eliminar proceso por ID)
+    // 4. DELETE (remove a process by ID)
     public boolean delete(int idProceso) {
         String sql = "DELETE FROM proceso_cocina WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -94,7 +94,7 @@ public class ProcesoCocinaDAO {
         }
     }
 
-    // 5. READ ALL (Listar todos los procesos)
+    // 5. READ ALL (list every process)
     public List<ProcesoCocina> findAll() {
         String sql = "SELECT * FROM proceso_cocina";
         List<ProcesoCocina> lista = new ArrayList<>();
@@ -111,7 +111,7 @@ public class ProcesoCocinaDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar un proceso específico)
+    // 6. READ BY ID (find one process)
     public ProcesoCocina findById(int idProceso) {
         String sql = "SELECT * FROM proceso_cocina WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -129,7 +129,7 @@ public class ProcesoCocinaDAO {
         return null;
     }
 
-    // 7. READ por comanda (id_comanda es UNIQUE: a lo sumo un proceso)
+    // 7. READ by order (id_comanda is UNIQUE, so there is at most one process)
     public ProcesoCocina findByComanda(int idComanda) {
         String sql = "SELECT * FROM proceso_cocina WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -147,7 +147,7 @@ public class ProcesoCocinaDAO {
         return null;
     }
 
-    // 8. READ pendientes (cola del cocinero: aún sin hora_lista)
+    // 8. READ pending (the cook queue: the ones with no hora_lista yet)
     public List<ProcesoCocina> findPendientes() {
         String sql = "SELECT * FROM proceso_cocina WHERE hora_lista IS NULL ORDER BY hora_recibida";
         List<ProcesoCocina> lista = new ArrayList<>();
@@ -164,7 +164,7 @@ public class ProcesoCocinaDAO {
         return lista;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo ProcesoCocina. */
+    /** Maps the current ResultSet row into a ProcesoCocina object. */
     private ProcesoCocina mapRow(ResultSet rs) throws SQLException {
         ProcesoCocina p = new ProcesoCocina();
         p.setId_proceso(rs.getInt("id_proceso"));

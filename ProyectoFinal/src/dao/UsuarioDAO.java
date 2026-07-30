@@ -11,13 +11,13 @@ import java.util.List;
 import model.Usuario;
 
 /**
- * DAO para la entidad Usuario, con operaciones CRUD y consultas por código y credenciales.
+ * DAO for the Usuario entity, with CRUD operations and queries by code and credentials.
  */
 public class UsuarioDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nuevo empleado; la contraseña llega en texto plano y se hashea aquí)
+    // 1. CREATE (insert a new employee; the password arrives as plain text and is hashed here)
     public boolean insert(Usuario usuario) {
         String sql = "INSERT INTO usuario (codigo, nombre, contrasena, id_tipo, activo) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -36,7 +36,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 2. UPDATE (Modificar datos del empleado; NO toca la contraseña — usar updateContrasena)
+    // 2. UPDATE (change the employee data; does NOT touch the password, use updateContrasena for that)
     public boolean update(Usuario usuario) {
         String sql = "UPDATE usuario SET nombre = ?, id_tipo = ?, activo = ? WHERE codigo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -54,7 +54,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 3. UPDATE contraseña (recibe texto plano y guarda el hash MD5)
+    // 3. UPDATE password (takes plain text and stores the MD5 hash)
     public boolean updateContrasena(String codigo, String nuevaContrasena) {
         String sql = "UPDATE usuario SET contrasena = ? WHERE codigo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -69,7 +69,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 4. DELETE (Eliminar empleado por código)
+    // 4. DELETE (remove an employee by code)
     public boolean delete(String codigo) {
         String sql = "DELETE FROM usuario WHERE codigo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -83,7 +83,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 5. READ ALL (Listar todos los empleados)
+    // 5. READ ALL (list every employee)
     public List<Usuario> findAll() {
         String sql = "SELECT * FROM usuario";
         List<Usuario> lista = new ArrayList<>();
@@ -100,7 +100,7 @@ public class UsuarioDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar empleado por código, ej. SAL001)
+    // 6. READ BY ID (find an employee by code, e.g. SAL001)
     public Usuario findById(String codigo) {
         String sql = "SELECT * FROM usuario WHERE codigo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -144,12 +144,12 @@ public class UsuarioDAO {
         return null;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo Usuario. */
+    /** Maps the current ResultSet row into a Usuario object. */
     private Usuario mapRow(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setCodigo(rs.getString("codigo"));
         u.setNombre(rs.getString("nombre"));
-        u.setContrasena(rs.getString("contrasena")); // ya viene hasheada
+        u.setContrasena(rs.getString("contrasena")); // it is already hashed
         u.setId_tipo(rs.getInt("id_tipo"));
         u.setActivo(rs.getInt("activo"));
         return u;

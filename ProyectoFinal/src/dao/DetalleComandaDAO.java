@@ -12,13 +12,13 @@ import model.Comida;
 import model.DetalleComanda;
 
 /**
- * DAO para la entidad DetalleComanda, con operaciones CRUD y consultas por comanda.
+ * DAO for the DetalleComanda entity, with CRUD operations and queries by order.
  */
 public class DetalleComandaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Agregar un ítem al detalle de la comanda)
+    // 1. CREATE (add one item to the order detail)
     public boolean insert(DetalleComanda detalle) {
         String sql = "INSERT INTO detalle_comanda (id_comanda, tipo_item, id_item, cantidad, precio_unit) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -37,7 +37,7 @@ public class DetalleComandaDAO {
         }
     }
 
-    // 2. UPDATE (Modificar un ítem del detalle)
+    // 2. UPDATE (change one item of the detail)
     public boolean update(DetalleComanda detalle) {
         String sql = "UPDATE detalle_comanda SET id_comanda = ?, tipo_item = ?, id_item = ?, cantidad = ?, precio_unit = ? WHERE id_detalle = ?";
         try (Connection con = conexionDB.getConexion();
@@ -57,7 +57,7 @@ public class DetalleComandaDAO {
         }
     }
 
-    // 3. DELETE (Eliminar un ítem del detalle)
+    // 3. DELETE (remove one item of the detail)
     public boolean delete(int idDetalle) {
         String sql = "DELETE FROM detalle_comanda WHERE id_detalle = ?";
         try (Connection con = conexionDB.getConexion();
@@ -71,7 +71,7 @@ public class DetalleComandaDAO {
         }
     }
 
-    // 4. READ BY ID (Buscar un detalle específico)
+    // 4. READ BY ID (find one detail line)
     public DetalleComanda findById(int idDetalle) {
         String sql = "SELECT * FROM detalle_comanda WHERE id_detalle = ?";
         try (Connection con = conexionDB.getConexion();
@@ -89,7 +89,7 @@ public class DetalleComandaDAO {
         return null;
     }
 
-    // 5. READ por comanda (todos los ítems de una comanda)
+    // 5. READ by order (every item of one order)
     public List<DetalleComanda> findByComanda(int idComanda) {
         String sql = "SELECT * FROM detalle_comanda WHERE id_comanda = ?";
         List<DetalleComanda> lista = new ArrayList<>();
@@ -109,9 +109,9 @@ public class DetalleComandaDAO {
     }
 
     /**
-     * Resuelve el nombre del ítem (comida o bebida) dado un DetalleComanda.
-     * @param detalle objeto DetalleComanda
-     * @return nombre del ítem, o null si no se encuentra
+     * Resolves the item name (dish or drink) of a given DetalleComanda.
+     * @param detalle the DetalleComanda object
+     * @return the item name, or null when it is not found
      */
     public String getNombreItem(DetalleComanda detalle) {
         if ("comida".equals(detalle.getTipo_item())) {
@@ -125,7 +125,7 @@ public class DetalleComandaDAO {
         return null;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo DetalleComanda. */
+    /** Maps the current ResultSet row into a DetalleComanda object. */
     private DetalleComanda mapRow(ResultSet rs) throws SQLException {
         DetalleComanda d = new DetalleComanda();
         d.setId_detalle(rs.getInt("id_detalle"));

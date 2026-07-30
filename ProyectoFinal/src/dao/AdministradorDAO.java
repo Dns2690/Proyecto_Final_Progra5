@@ -11,13 +11,13 @@ import java.util.List;
 import model.Administrador;
 
 /**
- * DAO para la entidad Administrador, con operaciones CRUD y login.
+ * DAO for the Administrador entity, with CRUD operations and login.
  */
 public class AdministradorDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar admin; la contraseña llega en texto plano y se hashea aquí)
+    // 1. CREATE (insert an admin; the password arrives as plain text and is hashed here)
     public boolean insert(Administrador admin) {
         String sql = "INSERT INTO administrador (usuario, contrasena, nombre) VALUES (?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -34,7 +34,7 @@ public class AdministradorDAO {
         }
     }
 
-    // 2. UPDATE (Modificar datos del admin; NO toca la contraseña — usar updateContrasena)
+    // 2. UPDATE (change the admin data; does NOT touch the password, use updateContrasena for that)
     public boolean update(Administrador admin) {
         String sql = "UPDATE administrador SET usuario = ?, nombre = ? WHERE id_admin = ?";
         try (Connection con = conexionDB.getConexion();
@@ -51,7 +51,7 @@ public class AdministradorDAO {
         }
     }
 
-    // 3. UPDATE contraseña (recibe texto plano y guarda el hash MD5)
+    // 3. UPDATE password (takes plain text and stores the MD5 hash)
     public boolean updateContrasena(int idAdmin, String nuevaContrasena) {
         String sql = "UPDATE administrador SET contrasena = ? WHERE id_admin = ?";
         try (Connection con = conexionDB.getConexion();
@@ -66,7 +66,7 @@ public class AdministradorDAO {
         }
     }
 
-    // 4. DELETE (Eliminar admin por ID)
+    // 4. DELETE (remove an admin by ID)
     public boolean delete(int idAdmin) {
         String sql = "DELETE FROM administrador WHERE id_admin = ?";
         try (Connection con = conexionDB.getConexion();
@@ -80,7 +80,7 @@ public class AdministradorDAO {
         }
     }
 
-    // 5. READ ALL (Listar todos los admins)
+    // 5. READ ALL (list every admin)
     public List<Administrador> findAll() {
         String sql = "SELECT * FROM administrador";
         List<Administrador> lista = new ArrayList<>();
@@ -97,7 +97,7 @@ public class AdministradorDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar un admin específico)
+    // 6. READ BY ID (find one admin)
     public Administrador findById(int idAdmin) {
         String sql = "SELECT * FROM administrador WHERE id_admin = ?";
         try (Connection con = conexionDB.getConexion();
@@ -116,10 +116,10 @@ public class AdministradorDAO {
     }
 
     /**
-     * Valida el login de un administrador comparando el usuario y la contraseña (en texto plano) con la base de datos.
-     * @param usuario nombre de usuario del administrador
-     * @param contrasena contraseña en texto plano del administrador
-     * @return objeto Administrador si las credenciales son correctas, o null si no son válidas
+     * Validates an administrator login by comparing the user name and the plain text password against the database.
+     * @param usuario administrator user name
+     * @param contrasena administrator password as plain text
+     * @return an Administrador object when the credentials are correct, or null when they are not
      */
     public Administrador login(String usuario, String contrasena) {
         String sql = "SELECT * FROM administrador WHERE usuario = ? AND contrasena = ?";
@@ -140,12 +140,12 @@ public class AdministradorDAO {
         return null;
     }
 
-    /** Retorna un objeto Administrador mapeado desde una fila del ResultSet. */
+    /** Maps the current ResultSet row into an Administrador object. */
     private Administrador mapRow(ResultSet rs) throws SQLException {
         Administrador a = new Administrador();
         a.setId_admin(rs.getInt("id_admin"));
         a.setUsuario(rs.getString("usuario"));
-        a.setContrasena(rs.getString("contrasena")); // ya viene hasheada
+        a.setContrasena(rs.getString("contrasena")); // it is already hashed
         a.setNombre(rs.getString("nombre"));
         return a;
     }

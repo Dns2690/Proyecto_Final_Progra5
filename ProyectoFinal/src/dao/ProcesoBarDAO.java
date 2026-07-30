@@ -12,13 +12,13 @@ import java.util.List;
 import model.ProcesoBar;
 
 /**
- * DAO para la entidad ProcesoBar, con operaciones CRUD y consultas por comanda.
+ * DAO for the ProcesoBar entity, with CRUD operations and queries by order.
  */
 public class ProcesoBarDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (El bar recibe una comanda)
+    // 1. CREATE (the bar receives an order)
     public boolean insert(ProcesoBar proceso) {
         String sql = "INSERT INTO proceso_bar (id_comanda, hora_recibida, hora_lista, codigo_bar) VALUES (?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -40,7 +40,7 @@ public class ProcesoBarDAO {
         }
     }
 
-    // 2. UPDATE (Modificar proceso existente)
+    // 2. UPDATE (change an existing process)
     public boolean update(ProcesoBar proceso) {
         String sql = "UPDATE proceso_bar SET id_comanda = ?, hora_recibida = ?, hora_lista = ?, codigo_bar = ? WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -63,7 +63,7 @@ public class ProcesoBarDAO {
         }
     }
 
-    // 3. UPDATE hora_lista (Marcar comanda como lista en el bar)
+    // 3. UPDATE hora_lista (mark the order as ready in the bar)
     public boolean updateHoraLista(int idProceso, LocalDateTime horaLista) {
         String sql = "UPDATE proceso_bar SET hora_lista = ? WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -80,7 +80,7 @@ public class ProcesoBarDAO {
         }
     }
 
-    // 4. DELETE (Eliminar proceso por ID)
+    // 4. DELETE (remove a process by ID)
     public boolean delete(int idProceso) {
         String sql = "DELETE FROM proceso_bar WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -94,7 +94,7 @@ public class ProcesoBarDAO {
         }
     }
 
-    // 5. READ ALL (Listar todos los procesos)
+    // 5. READ ALL (list every process)
     public List<ProcesoBar> findAll() {
         String sql = "SELECT * FROM proceso_bar";
         List<ProcesoBar> lista = new ArrayList<>();
@@ -111,7 +111,7 @@ public class ProcesoBarDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar un proceso específico)
+    // 6. READ BY ID (find one process)
     public ProcesoBar findById(int idProceso) {
         String sql = "SELECT * FROM proceso_bar WHERE id_proceso = ?";
         try (Connection con = conexionDB.getConexion();
@@ -129,7 +129,7 @@ public class ProcesoBarDAO {
         return null;
     }
 
-    // 7. READ por comanda (id_comanda es UNIQUE: a lo sumo un proceso)
+    // 7. READ by order (id_comanda is UNIQUE, so there is at most one process)
     public ProcesoBar findByComanda(int idComanda) {
         String sql = "SELECT * FROM proceso_bar WHERE id_comanda = ?";
         try (Connection con = conexionDB.getConexion();
@@ -147,7 +147,7 @@ public class ProcesoBarDAO {
         return null;
     }
 
-    // 8. READ pendientes (cola del bartender: aún sin hora_lista)
+    // 8. READ pending (the bartender queue: the ones with no hora_lista yet)
     public List<ProcesoBar> findPendientes() {
         String sql = "SELECT * FROM proceso_bar WHERE hora_lista IS NULL ORDER BY hora_recibida";
         List<ProcesoBar> lista = new ArrayList<>();
@@ -164,7 +164,7 @@ public class ProcesoBarDAO {
         return lista;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo ProcesoBar. */
+    /** Maps the current ResultSet row into a ProcesoBar object. */
     private ProcesoBar mapRow(ResultSet rs) throws SQLException {
         ProcesoBar p = new ProcesoBar();
         p.setId_proceso(rs.getInt("id_proceso"));

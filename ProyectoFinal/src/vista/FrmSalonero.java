@@ -39,7 +39,7 @@ import model.SeccionSalon;
 import session.SesionActual;
 
 /**
- * Pantalla del salonero: arma comandas, revisa las suyas y maneja reservas.
+ * Waiter screen: builds orders, reviews his own ones and handles reservations.
  *
  * @author valer
  */
@@ -47,10 +47,10 @@ public class FrmSalonero extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmSalonero.class.getName());
 
-    // una comanda tiene 20 minutos para ser servida
+    // an order has 20 minutes to be served
     private static final int LIMITE_MINUTOS = 20;
 
-    // cuantas personas caben en una mesa, para saber cuantas mesas ocupa una reserva
+    // how many people fit at one table, used to know how many tables a reservation needs
     private static final int CAPACIDAD_MESA = 4;
 
     private final MesaDAO mesaDAO = new MesaDAO();
@@ -65,12 +65,12 @@ public class FrmSalonero extends javax.swing.JFrame {
     private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
     private final FacturaDAO facturaDAO = new FacturaDAO();
 
-    // formatos para mostrar las horas
+    // formats used to display the times
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private final DateTimeFormatter formatoSoloHora = DateTimeFormatter.ofPattern("HH:mm");
 
-    private List<Mesa> mesas = new ArrayList<>();            // mesas de mi seccion
-    private final List<DetalleComanda> orden = new ArrayList<>(); // items que voy agregando
+    private List<Mesa> mesas = new ArrayList<>();            // tables of my own section
+    private final List<DetalleComanda> orden = new ArrayList<>(); // items being added to the current order
     private List<Comanda> misComandas = new ArrayList<>();
     private List<Reserva> reservas = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         setTitle("Restaurante - Salonero");
 
-        // las tablas son solo para ver, no para editar
+        // the tables are read only, they are not meant to be edited
         tblOrdenActual.setDefaultEditor(Object.class, null);
         tblMisComandas.setDefaultEditor(Object.class, null);
         tblReservas.setDefaultEditor(Object.class, null);
@@ -581,13 +581,13 @@ public class FrmSalonero extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCerrarSesionSalActionPerformed
 
     private void txtCodigoPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoPlatoActionPerformed
-        // al darle enter al codigo muestro el nombre del plato
+        // pressing enter on the code shows the name of the dish
         Comida comida = comidaDAO.findById(leerEntero(txtCodigoPlato.getText()));
         txtNombrePlato.setText(comida != null ? comida.getNombre() : "No existe ese código");
     }//GEN-LAST:event_txtCodigoPlatoActionPerformed
 
     private void txtCodigoBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoBebidaActionPerformed
-        // al darle enter al codigo muestro el nombre de la bebida
+        // pressing enter on the code shows the name of the drink
         Bebida bebida = bebidaDAO.findById(leerEntero(txtCodigoBebida.getText()));
         txtNombreBebida.setText(bebida != null ? bebida.getNombre() : "No existe ese código");
     }//GEN-LAST:event_txtCodigoBebidaActionPerformed
@@ -666,12 +666,12 @@ public class FrmSalonero extends javax.swing.JFrame {
         limpiarReserva();
     }//GEN-LAST:event_btnLimpiarReservaActionPerformed
 
-    // ------------------ carga de datos ------------------
+    // ------------------ data loading ------------------
 
-    /** Llena la pantalla con los datos del salonero que inicio sesion. */
+    /** Fills the screen with the data of the waiter who logged in. */
     private void cargarTodo() {
         if (SesionActual.getUsuario() == null) {
-            return; // por si abren la ventana sin haber hecho login
+            return; // in case the window is opened without logging in first
         }
         IblBienvenidaSal.setText("Salonero: " + SesionActual.getNombre());
         IblDisponibilidad.setText("");
@@ -682,7 +682,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         cargarReservas();
     }
 
-    /** Busca la seccion que me tocó hoy y llena el combo con sus mesas. */
+    /** Finds the section assigned for today and fills the combo with its tables. */
     private void cargarSeccionYMesas() {
         cmbMesaAsignada.removeAllItems();
         mesas = new ArrayList<>();
@@ -703,7 +703,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Trae mis comandas y avisa si alguna pasó los 20 minutos. */
+    /** Loads my orders and warns when any of them went over the 20 minutes. */
     private void cargarMisComandas() {
         misComandas = comandaDAO.findByEmpleado(SesionActual.getCodigo());
         List<Mesa> todasLasMesas = mesaDAO.findAll();
@@ -724,8 +724,8 @@ public class FrmSalonero extends javax.swing.JFrame {
     }
 
     /**
-     * Arma el aviso de los pedidos listos. Por cada comanda lista muestra la mesa,
-     * la hora en que cocina o el bar la terminaron y qué quedó listo.
+     * Builds the notice of the orders that are ready. For each one it shows the table,
+     * the time the kitchen or the bar finished it, and what is ready to be served.
      */
     private void pintarNotificacion(List<Mesa> todasLasMesas, int atrasadas) {
         String aviso = "";
@@ -737,7 +737,7 @@ public class FrmSalonero extends javax.swing.JFrame {
             }
             listas++;
             if (listas > 3) {
-                continue; // no lleno la pantalla, abajo digo cuantas faltan
+                continue; // keep the panel short, the remaining ones are summarized below
             }
             aviso = aviso + "PEDIDO LISTO &nbsp;|&nbsp; " + nombreMesa(todasLasMesas, c.getId_mesa())
                     + " &nbsp;|&nbsp; comanda #" + c.getId_comanda()
@@ -765,7 +765,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Hora en que se terminó de preparar la comanda (la más tardía entre cocina y bar). */
+    /** Time the order was finished, taking the later one between the kitchen and the bar. */
     private String horaNotificacion(int idComanda) {
         LocalDateTime hora = null;
         ProcesoCocina pc = cocinaDAO.findByComanda(idComanda);
@@ -779,7 +779,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return hora != null ? "listo a las " + hora.format(formatoSoloHora) : "sin hora";
     }
 
-    /** Lista los platos y bebidas que quedaron listos en esa comanda. */
+    /** Lists the dishes and drinks that are ready in that order. */
     private String queEstaListo(int idComanda) {
         String platos = "";
         String bebidas = "";
@@ -801,7 +801,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return texto;
     }
 
-    /** Llena la tabla de reservas. */
+    /** Fills the reservations table. */
     private void cargarReservas() {
         reservas = reservaDAO.findAll();
         DefaultTableModel modelo = (DefaultTableModel) tblReservas.getModel();
@@ -814,9 +814,9 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    // ------------------ comandas ------------------
+    // ------------------ orders ------------------
 
-    /** Mete un item a la orden que estoy armando (todavia no va a la base). */
+    /** Adds one item to the order being built; it is not saved to the database yet. */
     private void agregarItem(String tipo, int idItem, int cantidad, BigDecimal precio) {
         DetalleComanda detalle = new DetalleComanda();
         detalle.setTipo_item(tipo);
@@ -827,7 +827,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         pintarOrden();
     }
 
-    /** Vuelve a dibujar la tabla de la orden actual. */
+    /** Redraws the table of the order being built. */
     private void pintarOrden() {
         DefaultTableModel modelo = (DefaultTableModel) tblOrdenActual.getModel();
         modelo.setRowCount(0);
@@ -836,7 +836,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Guarda la comanda con sus detalles y la manda a cocina y/o al bar. */
+    /** Saves the order with its details and sends it to the kitchen and/or the bar. */
     private void generarComanda() {
         int fila = cmbMesaAsignada.getSelectedIndex();
         if (fila < 0 || mesas.isEmpty()) {
@@ -875,7 +875,7 @@ public class FrmSalonero extends javax.swing.JFrame {
             }
         }
 
-        // si pidieron comida va a cocina, si pidieron bebida va al bar
+        // dishes go to the kitchen and drinks go to the bar
         if (hayComida) {
             ProcesoCocina pc = new ProcesoCocina();
             pc.setId_comanda(idComanda);
@@ -889,7 +889,7 @@ public class FrmSalonero extends javax.swing.JFrame {
             barDAO.insert(pb);
         }
 
-        // la mesa queda ocupada
+        // the table becomes busy
         mesa.setDisponible(0);
         mesaDAO.update(mesa);
 
@@ -901,7 +901,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         cargarMisComandas();
     }
 
-    /** Muestra los items y el total de la comanda seleccionada. */
+    /** Shows the items and the total of the selected order. */
     private void verDetalleComanda() {
         int fila = tblMisComandas.getSelectedRow();
         if (fila < 0) {
@@ -929,7 +929,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, texto, "Detalle de la comanda", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Cierra la comanda seleccionada y deja la mesa libre otra vez. */
+    /** Closes the selected order and frees its table again. */
     private void cerrarComanda() {
         int fila = tblMisComandas.getSelectedRow();
         if (fila < 0) {
@@ -954,7 +954,7 @@ public class FrmSalonero extends javax.swing.JFrame {
             return;
         }
 
-        // dejo la mesa libre
+        // free the table
         for (Mesa m : mesaDAO.findAll()) {
             if (m.getId_mesa() == comanda.getId_mesa()) {
                 m.setDisponible(1);
@@ -969,11 +969,11 @@ public class FrmSalonero extends javax.swing.JFrame {
     }
 
     /**
-     * Al cerrar la comanda se saca la factura provisional, que es la que el
-     * cliente ve y la que despues pasa a la caja para ser cancelada.
+     * Closing the order issues the provisional invoice, which is the one the customer
+     * sees and the one that later goes to the cashier to be paid.
      */
     private void generarFacturaProvisional(Comanda comanda) {
-        // si ya tiene una provisional no saco otra
+        // do not issue a second provisional invoice if there is one already
         for (Factura f : facturaDAO.findByComanda(comanda.getId_comanda())) {
             if ("provisional".equals(f.getTipo())) {
                 return;
@@ -991,9 +991,9 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         Factura factura = new Factura();
         factura.setId_comanda(comanda.getId_comanda());
-        factura.setCodigo_cajero(SesionActual.getCodigo()); // quien la genero
+        factura.setCodigo_cajero(SesionActual.getCodigo()); // who issued it
         factura.setFecha_emision(LocalDateTime.now());
-        factura.setSubtotal(subtotal); // el DAO le calcula el IVA
+        factura.setSubtotal(subtotal); // the DAO computes the sales tax
         factura.setTipo("provisional");
         factura.setEstado("pendiente");
 
@@ -1016,7 +1016,7 @@ public class FrmSalonero extends javax.swing.JFrame {
                 "Factura provisional", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Devuelve el numero de mesa buscandolo en la base. */
+    /** Returns the table number, looking it up in the database. */
     private String numeroDeMesa(int idMesa) {
         for (Mesa m : mesaDAO.findAll()) {
             if (m.getId_mesa() == idMesa) {
@@ -1026,12 +1026,12 @@ public class FrmSalonero extends javax.swing.JFrame {
         return "-";
     }
 
-    // ------------------ reservas ------------------
+    // ------------------ reservations ------------------
 
     /**
-     * Vista preliminar de la reserva: muestra cuales mesas estan libres a esa fecha
-     * y hora, cuantas se necesitan segun la cantidad de personas, y si no hay,
-     * a que hora se desocupa una.
+     * Reservation preview: it shows which tables are free at that date and time,
+     * how many are needed for the party size and, when there is no room,
+     * at what time a table becomes free.
      */
     private void consultarDisponibilidad() {
         LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
@@ -1064,7 +1064,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Guarda una reserva nueva, asignandole una mesa libre. */
+    /** Saves a new reservation and assigns it a free table. */
     private void guardarReserva() {
         String nombre = txtNombreCliente.getText().trim();
         if (nombre.isEmpty()) {
@@ -1088,7 +1088,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         int mesasNecesarias = mesasQueOcupa(personas);
         List<Mesa> libres = reservaDAO.findMesasLibres(fecha, hora);
 
-        // reviso que haya mesa antes de guardar
+        // check there is a table before saving
         if (libres.size() < mesasNecesarias) {
             LocalTime proxima = reservaDAO.proximaHoraLibre(fecha, hora, mesasNecesarias);
             String mensaje = "No hay mesa para " + personas + " persona(s) a las " + hora.format(formatoSoloHora) + ".";
@@ -1123,7 +1123,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Cuantas mesas ocupa un grupo, segun lo que cabe en cada mesa. */
+    /** How many tables a party needs, based on how many people fit at one table. */
     private int mesasQueOcupa(int personas) {
         int mesas = personas / CAPACIDAD_MESA;
         if (personas % CAPACIDAD_MESA > 0) {
@@ -1132,7 +1132,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return mesas;
     }
 
-    /** Arma el texto con los numeros de mesa, cortando si son muchas. */
+    /** Builds the text with the table numbers, trimming the list when there are many. */
     private String listaDeMesas(List<Mesa> mesasLibres) {
         String texto = "";
         for (int i = 0; i < mesasLibres.size() && i < 8; i++) {
@@ -1145,7 +1145,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return texto;
     }
 
-    /** Pone en cancelada la reserva seleccionada. */
+    /** Sets the selected reservation as cancelled. */
     private void cancelarReserva() {
         int fila = tblReservas.getSelectedRow();
         if (fila < 0) {
@@ -1172,7 +1172,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Deja los campos de la reserva en blanco. */
+    /** Clears the reservation fields. */
     private void limpiarReserva() {
         txtNombreCliente.setText("");
         txtTelefonoCliente.setText("");
@@ -1184,9 +1184,9 @@ public class FrmSalonero extends javax.swing.JFrame {
         tblReservas.clearSelection();
     }
 
-    // ------------------ ayudas ------------------
+    // ------------------ helpers ------------------
 
-    /** Minutos que lleva abierta una comanda (0 si ya está cerrada). */
+    /** Minutes the order has been open, or 0 when it is already closed. */
     private long minutosDeAtraso(Comanda comanda) {
         if ("cerrada".equals(comanda.getEstado()) || comanda.getHora_orden() == null) {
             return 0;
@@ -1194,7 +1194,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return Duration.between(comanda.getHora_orden(), LocalDateTime.now()).toMinutes();
     }
 
-    /** Busca el número de mesa dentro de la lista, para no mostrar el id pelado. */
+    /** Finds the table number in the list, so the raw id is not displayed. */
     private String nombreMesa(List<Mesa> lista, int idMesa) {
         for (Mesa m : lista) {
             if (m.getId_mesa() == idMesa) {
@@ -1204,7 +1204,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Convierte el texto a numero, devuelve -1 si no es un numero. */
+    /** Converts the text into a number, or -1 when it is not a number. */
     private int leerEntero(String texto) {
         try {
             return Integer.parseInt(texto.trim());
@@ -1213,7 +1213,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Convierte el texto a fecha, devuelve null si esta mal escrita. */
+    /** Converts the text into a date, or null when it is not well written. */
     private LocalDate leerFecha(String texto) {
         try {
             return LocalDate.parse(texto);
@@ -1222,7 +1222,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         }
     }
 
-    /** Convierte el texto a hora, devuelve null si esta mal escrita. */
+    /** Converts the text into a time, or null when it is not well written. */
     private LocalTime leerHora(String texto) {
         try {
             return LocalTime.parse(texto);

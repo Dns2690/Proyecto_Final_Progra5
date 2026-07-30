@@ -8,8 +8,8 @@ import model.TipoUsuario;
 import model.Usuario;
 
 /**
- * Clase singleton que mantiene la sesión actual del usuario o administrador logueado.
- * Proporciona métodos para iniciar/cerrar sesión y obtener información de la sesión.   
+ * Singleton class that holds the session of the user or administrator currently logged in.
+ * It provides methods to log in, log out and read the session data.
  */
 public final class SesionActual {
 
@@ -21,8 +21,8 @@ public final class SesionActual {
     }
 
     /**
-     * inicia sesión de un empleado (delegando a {@code UsuarioDAO.login}, que hashea la contraseña con MD5).
-     * En caso de éxito, reemplaza la sesión previa (si la hubiera).
+     * Logs an employee in, delegating to {@code UsuarioDAO.login}, which hashes the password with MD5.
+     * On success it replaces any previous session.
      */
     public static boolean iniciarSesionEmpleado(String codigo, String contrasena) {
         Usuario u = new UsuarioDAO().login(codigo, contrasena);
@@ -36,10 +36,10 @@ public final class SesionActual {
     }
 
     /**
-     * inicia sesión de un administrador (delegando a {@code AdministradorDAO.login}, que hashea la contraseña con MD5).
-     * En caso de éxito, reemplaza la sesión previa (si la hubiera).
+     * Logs an administrator in, delegating to {@code AdministradorDAO.login}, which hashes the password with MD5.
+     * On success it replaces any previous session.
      *
-     * @return true si el login fue exitoso, false si no
+     * @return true when the login succeeded, false when it did not
      */
     public static boolean iniciarSesionAdmin(String usuarioAdmin, String contrasena) {
         Administrador a = new AdministradorDAO().login(usuarioAdmin, contrasena);
@@ -51,40 +51,40 @@ public final class SesionActual {
         return true;
     }
 
-    /** Cierra la sesión actual (logout). */
+    /** Closes the current session (logout). */
     public static void cerrarSesion() {
         usuario = null;
         tipoUsuario = null;
         administrador = null;
     }
 
-    /** @return true si hay una sesión iniciada */
+    /** @return true when a session is open */
     public static boolean haySesion() {
         return usuario != null || administrador != null;
     }
 
-    /** @return true si el usuario actual es un administrador */
+    /** @return true when the current user is an administrator */
     public static boolean esAdmin() {
         return administrador != null;
     }
 
-    /** @return el empleado logueado, o null si no hay sesión / es administrador */
+    /** @return the logged in employee, or null when there is no session or it is an administrator */
     public static Usuario getUsuario() {
         return usuario;
     }
 
-    /** @return el tipo de usuario del empleado logueado, o null si no hay sesión / es administrador */
+    /** @return the user type of the logged in employee, or null when there is no session or it is an administrator */
     public static TipoUsuario getTipoUsuario() {
         return tipoUsuario;
     }
 
-    /** @return el administrador logueado, o null si no hay sesión / es empleado */
+    /** @return the logged in administrator, or null when there is no session or it is an employee */
     public static Administrador getAdministrador() {
         return administrador;
     }
 
     /**
-     * @return el código del empleado logueado (ej. SAL001), o el nombre de usuario del administrador logueado, o null si no hay sesión
+     * @return the code of the logged in employee (e.g. SAL001), or the administrator user name, or null when there is no session
      */
     public static String getCodigo() {
         if (usuario != null) {
@@ -96,7 +96,7 @@ public final class SesionActual {
         return null;
     }
 
-    /** @return el nombre del empleado logueado, o el nombre del administrador logueado, o null si no hay sesión */
+    /** @return the name of the logged in employee or administrator, or null when there is no session */
     public static String getNombre() {
         if (usuario != null) {
             return usuario.getNombre();
@@ -108,7 +108,7 @@ public final class SesionActual {
     }
 
     /**
-     * @return nombre del rol del usuario logueado (ej. "Salonero", "Cocinero", "Administrador"), o null si no hay sesión
+     * @return the role name of the logged in user (e.g. "Salonero", "Cocinero", "Administrador"), or null when there is no session
      */
     public static String getRol() {
         if (administrador != null) {
@@ -121,7 +121,7 @@ public final class SesionActual {
     }
 
     /**
-     * @return el prefijo del rol del usuario logueado (ej. "SAL", "COS", "BAR"), o null si no hay sesión o es administrador
+     * @return the role prefix of the logged in user (e.g. "SAL", "COS", "BAR"), or null when there is no session or it is an administrator
      */
     public static String getPrefijo() {
         return tipoUsuario != null ? tipoUsuario.getPrefijo() : null;

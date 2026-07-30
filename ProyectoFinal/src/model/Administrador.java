@@ -27,7 +27,7 @@ public class Administrador {
         this.nombre = nombre;       
     }
     
-    // Getters y Setters
+    // Getters and setters
     public int getId_admin(){return id_admin;}
     public String getUsuario(){return usuario;}
     public String getContrasena(){return contrasena;}

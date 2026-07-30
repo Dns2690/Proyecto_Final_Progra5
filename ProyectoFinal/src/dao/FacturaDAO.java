@@ -14,7 +14,7 @@ import java.util.List;
 import model.Factura;
 
 /**
- * DAO para la entidad Factura, con operaciones CRUD y consultas por comanda.
+ * DAO for the Factura entity, with CRUD operations and queries by order.
  */
 public class FacturaDAO {
 
@@ -23,15 +23,15 @@ public class FacturaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva factura)
+    // 1. CREATE (insert a new invoice)
     public boolean insert(Factura factura) {
         return insertGetId(factura) > 0;
     }
 
     /**
-     * Inserta una nueva factura y retorna el ID generado. Retorna -1 si falla.
-     * @param factura objeto Factura a insertar
-     * @return ID de la factura insertada, o -1 si hubo un error    
+     * Inserts a new invoice and returns the generated ID, or -1 when it fails.
+     * @param factura the Factura object to insert
+     * @return the ID of the inserted invoice, or -1 on error
      */
     public int insertGetId(Factura factura) {
         aplicarIvaSiFalta(factura);
@@ -63,7 +63,7 @@ public class FacturaDAO {
         return -1;
     }
 
-    // 2. UPDATE (Modificar factura existente)
+    // 2. UPDATE (change an existing invoice)
     public boolean update(Factura factura) {
         aplicarIvaSiFalta(factura);
         String sql = "UPDATE factura SET id_comanda = ?, codigo_cajero = ?, fecha_emision = ?, subtotal = ?, impuesto = ?, total = ?, tipo = ?, estado = ? WHERE id_factura = ?";
@@ -89,7 +89,7 @@ public class FacturaDAO {
         }
     }
 
-    // 3. UPDATE estado (pendiente / pagada)
+    // 3. UPDATE status (pendiente / pagada)
     public boolean updateEstado(int idFactura, String nuevoEstado) {
         String sql = "UPDATE factura SET estado = ? WHERE id_factura = ?";
         try (Connection con = conexionDB.getConexion();
@@ -104,7 +104,7 @@ public class FacturaDAO {
         }
     }
 
-    // 4. DELETE (Eliminar factura por ID)
+    // 4. DELETE (remove an invoice by ID)
     public boolean delete(int idFactura) {
         String sql = "DELETE FROM factura WHERE id_factura = ?";
         try (Connection con = conexionDB.getConexion();
@@ -118,7 +118,7 @@ public class FacturaDAO {
         }
     }
 
-    // 5. READ ALL (Listar todas las facturas)
+    // 5. READ ALL (list every invoice)
     public List<Factura> findAll() {
         String sql = "SELECT * FROM factura";
         List<Factura> lista = new ArrayList<>();
@@ -135,7 +135,7 @@ public class FacturaDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar una factura específica)
+    // 6. READ BY ID (find one invoice)
     public Factura findById(int idFactura) {
         String sql = "SELECT * FROM factura WHERE id_factura = ?";
         try (Connection con = conexionDB.getConexion();
@@ -153,7 +153,7 @@ public class FacturaDAO {
         return null;
     }
 
-    // 7. READ por comanda (varias si la cuenta se dividió por persona)
+    // 7. READ by order (several invoices when the bill was split per person)
     public List<Factura> findByComanda(int idComanda) {
         String sql = "SELECT * FROM factura WHERE id_comanda = ?";
         List<Factura> lista = new ArrayList<>();
@@ -173,8 +173,8 @@ public class FacturaDAO {
     }
 
     /**
-     * LLena los campos de impuesto y total si son nulos, aplicando el IVA al subtotal.
-     * @param factura objeto Factura a procesar
+     * Fills the tax and total fields when they are null, applying the sales tax to the subtotal.
+     * @param factura the Factura object to process
      */
     private void aplicarIvaSiFalta(Factura factura) {
         if (factura.getSubtotal() == null) {
@@ -188,7 +188,7 @@ public class FacturaDAO {
         }
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo Factura. */
+    /** Maps the current ResultSet row into a Factura object. */
     private Factura mapRow(ResultSet rs) throws SQLException {
         Factura f = new Factura();
         f.setId_factura(rs.getInt("id_factura"));

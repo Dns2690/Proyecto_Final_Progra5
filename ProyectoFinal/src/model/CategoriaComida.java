@@ -23,7 +23,7 @@ public class CategoriaComida {
         this.nombre = nombre;
     }
     
-    // Getters y Setters
+    // Getters and setters
     
     public int getId_categoria(){ return id_categoria;}
     public String getNombre(){return nombre;}

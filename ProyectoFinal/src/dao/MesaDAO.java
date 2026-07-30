@@ -13,7 +13,7 @@ public class MesaDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva mesa)
+    // 1. CREATE (insert a new table)
     public boolean insert(Mesa mesa) {
         String sql = "INSERT INTO mesa (numero_mesa, id_seccion, disponible) VALUES (?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -30,7 +30,7 @@ public class MesaDAO {
         }
     }
 
-    // 2. UPDATE (Modificar mesa existente)
+    // 2. UPDATE (change an existing table)
     public boolean update(Mesa mesa) {
         String sql = "UPDATE mesa SET numero_mesa = ?, id_seccion = ?, disponible = ? WHERE id_mesa = ?";
         try (Connection con = conexionDB.getConexion();
@@ -48,7 +48,7 @@ public class MesaDAO {
         }
     }
 
-    // 3. DELETE (Eliminar mesa por ID)
+    // 3. DELETE (remove a table by ID)
     public boolean delete(int idMesa) {
         String sql = "DELETE FROM mesa WHERE id_mesa = ?";
         try (Connection con = conexionDB.getConexion();
@@ -62,7 +62,7 @@ public class MesaDAO {
         }
     }
 
-    // 4. READ ALL (Listar todas las mesas)
+    // 4. READ ALL (list every table)
     public List<Mesa> findAll() {
         String sql = "SELECT * FROM mesa";
         List<Mesa> lista = new ArrayList<>();
@@ -84,7 +84,7 @@ public class MesaDAO {
         return lista;
     }
 
-    // 5. FIND BY SECCION (Buscar mesas por id_seccion, la FK real de la tabla)
+    // 5. FIND BY SECTION (find tables by id_seccion, the real foreign key of the table)
     public List<Mesa> findBySeccion(int idSeccion) {
         String sql = "SELECT * FROM mesa WHERE id_seccion = ?";
         List<Mesa> lista = new ArrayList<>();

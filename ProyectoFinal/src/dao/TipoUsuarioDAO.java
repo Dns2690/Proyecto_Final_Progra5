@@ -10,13 +10,13 @@ import java.util.List;
 import model.TipoUsuario;
 
 /**
- * DAO para la entidad TipoUsuario, con operaciones CRUD y consultas por prefijo.
+ * DAO for the TipoUsuario entity, with CRUD operations and queries by prefix.
  */
 public class TipoUsuarioDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nuevo tipo de usuario)
+    // 1. CREATE (insert a new user type)
     public boolean insert(TipoUsuario tipo) {
         String sql = "INSERT INTO tipo_usuario (nombre, prefijo) VALUES (?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -31,7 +31,7 @@ public class TipoUsuarioDAO {
         }
     }
 
-    // 2. UPDATE (Modificar tipo existente)
+    // 2. UPDATE (change an existing user type)
     public boolean update(TipoUsuario tipo) {
         String sql = "UPDATE tipo_usuario SET nombre = ?, prefijo = ? WHERE id_tipo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -47,7 +47,7 @@ public class TipoUsuarioDAO {
         }
     }
 
-    // 3. DELETE (Eliminar tipo por ID)
+    // 3. DELETE (remove a user type by ID)
     public boolean delete(int idTipo) {
         String sql = "DELETE FROM tipo_usuario WHERE id_tipo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -61,7 +61,7 @@ public class TipoUsuarioDAO {
         }
     }
 
-    // 4. READ ALL (Listar todos los tipos)
+    // 4. READ ALL (list every user type)
     public List<TipoUsuario> findAll() {
         String sql = "SELECT * FROM tipo_usuario";
         List<TipoUsuario> lista = new ArrayList<>();
@@ -78,7 +78,7 @@ public class TipoUsuarioDAO {
         return lista;
     }
 
-    // 5. READ BY ID (Buscar un tipo específico)
+    // 5. READ BY ID (find one user type)
     public TipoUsuario findById(int idTipo) {
         String sql = "SELECT * FROM tipo_usuario WHERE id_tipo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -96,7 +96,7 @@ public class TipoUsuarioDAO {
         return null;
     }
 
-    // 6. READ por prefijo (para generar códigos de empleado, ej. SAL001)
+    // 6. READ by prefix (used to build the employee codes, e.g. SAL001)
     public TipoUsuario findByPrefijo(String prefijo) {
         String sql = "SELECT * FROM tipo_usuario WHERE prefijo = ?";
         try (Connection con = conexionDB.getConexion();
@@ -114,7 +114,7 @@ public class TipoUsuarioDAO {
         return null;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo TipoUsuario. */
+    /** Maps the current ResultSet row into a TipoUsuario object. */
     private TipoUsuario mapRow(ResultSet rs) throws SQLException {
         TipoUsuario t = new TipoUsuario();
         t.setId_tipo(rs.getInt("id_tipo"));

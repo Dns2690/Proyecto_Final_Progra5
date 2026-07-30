@@ -307,9 +307,15 @@ reconozca antes.
 
 | Requisito del enunciado | Estado | Qué responder |
 |---|---|---|
-| Documentación interna **en inglés** (5 pts) | ⚠ Riesgo | Los comentarios están en español. El enunciado pide inglés. |
 | Capacidad de la mesa | ⚠ Supuesto | La tabla `mesa` no tiene columna de capacidad; se asume 4 personas por mesa (`FrmSalonero.CAPACIDAD_MESA`). Lo correcto sería agregar la columna. |
 | Transacciones | ⚠ Limitación | Generar una comanda son varios INSERT sueltos, sin `commit`/`rollback`. Si fallara a la mitad quedaría incompleta. |
+
+**La documentación interna está en inglés**, como pide el enunciado: los comentarios y el Javadoc
+de las 45 clases se redactaron en inglés. Los **identificadores siguen en español**
+(`ComandaDAO`, `findMesasLibres`, `id_comanda`) porque son los nombres del dominio y de las
+columnas de la base; y los **mensajes al usuario también están en español**, que es lo que
+corresponde porque el sistema lo usa personal de un restaurante en Costa Rica. Lo único en inglés
+dentro del código son los comentarios, que es justo lo que se evalúa como documentación interna.
 
 Los diagramas de base de datos (E-R y desde SQL) los aporta denis por aparte.
 

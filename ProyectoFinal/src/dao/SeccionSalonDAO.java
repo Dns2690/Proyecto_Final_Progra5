@@ -10,13 +10,13 @@ import java.util.List;
 import model.SeccionSalon;
 
 /**
- * DAO para la entidad SeccionSalon, con operaciones CRUD.
+ * DAO for the SeccionSalon entity, with CRUD operations.
  */
 public class SeccionSalonDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva sección)
+    // 1. CREATE (insert a new section)
     public boolean insert(SeccionSalon seccion) {
         String sql = "INSERT INTO seccion_salon (nombre) VALUES (?)";
         try (Connection con = conexionDB.getConexion();
@@ -30,7 +30,7 @@ public class SeccionSalonDAO {
         }
     }
 
-    // 2. UPDATE (Modificar sección existente)
+    // 2. UPDATE (change an existing section)
     public boolean update(SeccionSalon seccion) {
         String sql = "UPDATE seccion_salon SET nombre = ? WHERE id_seccion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -45,7 +45,7 @@ public class SeccionSalonDAO {
         }
     }
 
-    // 3. DELETE (Eliminar sección por ID)
+    // 3. DELETE (remove a section by ID)
     public boolean delete(int idSeccion) {
         String sql = "DELETE FROM seccion_salon WHERE id_seccion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -59,7 +59,7 @@ public class SeccionSalonDAO {
         }
     }
 
-    // 4. READ ALL (Listar todas las secciones)
+    // 4. READ ALL (list every section)
     public List<SeccionSalon> findAll() {
         String sql = "SELECT * FROM seccion_salon";
         List<SeccionSalon> lista = new ArrayList<>();
@@ -76,7 +76,7 @@ public class SeccionSalonDAO {
         return lista;
     }
 
-    // 5. READ BY ID (Buscar una sección específica)
+    // 5. READ BY ID (find one section)
     public SeccionSalon findById(int idSeccion) {
         String sql = "SELECT * FROM seccion_salon WHERE id_seccion = ?";
         try (Connection con = conexionDB.getConexion();
@@ -94,7 +94,7 @@ public class SeccionSalonDAO {
         return null;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo SeccionSalon. */
+    /** Maps the current ResultSet row into a SeccionSalon object. */
     private SeccionSalon mapRow(ResultSet rs) throws SQLException {
         SeccionSalon s = new SeccionSalon();
         s.setId_seccion(rs.getInt("id_seccion"));

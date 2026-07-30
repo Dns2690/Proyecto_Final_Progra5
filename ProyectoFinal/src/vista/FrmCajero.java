@@ -24,7 +24,7 @@ import model.Mesa;
 import session.SesionActual;
 
 /**
- * Pantalla de la caja: cobra las comandas, junta o separada, aplicando el IVA.
+ * Cashier screen: it charges the orders, together or split, applying the sales tax.
  *
  * @author valer
  */
@@ -40,8 +40,8 @@ public class FrmCajero extends javax.swing.JFrame {
 
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    private List<Comanda> porCobrar = new ArrayList<>();       // comandas que faltan por facturar
-    private List<DetalleComanda> detallesEnPantalla = new ArrayList<>(); // items sin facturar de la comanda escogida
+    private List<Comanda> porCobrar = new ArrayList<>();       // orders that still have something to charge
+    private List<DetalleComanda> detallesEnPantalla = new ArrayList<>(); // unpaid items of the selected order
 
     /**
      * Creates new form FrmCajero
@@ -223,7 +223,7 @@ public class FrmCajero extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVerDetalleCajActionPerformed
 
     private void btnGenerarFacturaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarFacturaActionPerformed
-        // cuenta junta: se cobra todo lo que falta de la comanda
+        // single bill: everything left on the order is charged at once
         if (chkCuentaSeparada.isSelected()) {
             JOptionPane.showMessageDialog(this,
                     "Tiene marcada la cuenta separada.\nUse el botón Dividir Cuenta con los ítems seleccionados.");
@@ -240,7 +240,7 @@ public class FrmCajero extends javax.swing.JFrame {
         verHistorial();
     }//GEN-LAST:event_btnVerHistorialFacturasActionPerformed
 
-    /** Trae las comandas que todavia tienen algo sin facturar. */
+    /** Loads the orders that still have something left to charge. */
     private void cargarPorCobrar() {
         porCobrar = new ArrayList<>();
         List<Mesa> todasLasMesas = mesaDAO.findAll();
@@ -249,13 +249,13 @@ public class FrmCajero extends javax.swing.JFrame {
         modelo.setRowCount(0);
 
         for (Comanda c : comandaDAO.findAll()) {
-            // solo se cobra lo que ya salió de cocina/bar o lo que el salonero cerró
+            // only what already left the kitchen or the bar, or what the waiter closed, can be charged
             if (!"lista".equals(c.getEstado()) && !"cerrada".equals(c.getEstado())) {
                 continue;
             }
             List<DetalleComanda> faltantes = detallesSinFacturar(c.getId_comanda());
             if (faltantes.isEmpty()) {
-                continue; // esa comanda ya se cobró completa
+                continue; // that order was fully charged already
             }
             porCobrar.add(c);
             modelo.addRow(new Object[]{
@@ -267,7 +267,7 @@ public class FrmCajero extends javax.swing.JFrame {
         limpiarDetalle();
     }
 
-    /** Muestra los items que faltan por cobrar de la comanda escogida. */
+    /** Shows the items left to charge on the selected order. */
     private void verDetalle() {
         int fila = tblComandasPendientes.getSelectedRow();
         if (fila < 0) {
@@ -288,7 +288,7 @@ public class FrmCajero extends javax.swing.JFrame {
         mostrarTotales(detallesEnPantalla);
     }
 
-    /** Cobra solo los items marcados en la tabla (una persona de la mesa). */
+    /** Charges only the items selected in the table, that is, one person of the party. */
     private void dividirCuenta() {
         if (!chkCuentaSeparada.isSelected()) {
             JOptionPane.showMessageDialog(this, "Marque primero la casilla \"Cuenta Separada?\".");
@@ -312,7 +312,7 @@ public class FrmCajero extends javax.swing.JFrame {
         facturar(deEstaPersona, "los ítems seleccionados");
     }
 
-    /** Crea la factura con los items que le pasen y le aplica el IVA. */
+    /** Creates the invoice with the given items and applies the sales tax. */
     private void facturar(List<DetalleComanda> items, String queSeCobra) {
         int fila = tblComandasPendientes.getSelectedRow();
         if (fila < 0) {
@@ -335,7 +335,7 @@ public class FrmCajero extends javax.swing.JFrame {
             return;
         }
 
-        // si el salonero dejó una factura provisional, esa misma es la que se cancela aqui
+        // when the waiter left a provisional invoice, that same one is settled here
         Factura factura = buscarProvisional(comanda.getId_comanda());
         boolean eraProvisional = factura != null;
         if (!eraProvisional) {
@@ -345,7 +345,7 @@ public class FrmCajero extends javax.swing.JFrame {
         factura.setCodigo_cajero(SesionActual.getCodigo());
         factura.setFecha_emision(LocalDateTime.now());
         factura.setSubtotal(subtotal);
-        factura.setImpuesto(null); // en null para que el DAO los calcule con el 13%
+        factura.setImpuesto(null); // left null so the DAO computes them with the 13 percent
         factura.setTotal(null);
         factura.setTipo("final");
         factura.setEstado("pagada");
@@ -361,7 +361,7 @@ public class FrmCajero extends javax.swing.JFrame {
             return;
         }
 
-        // dejo apuntado cuales items entraron en esta factura
+        // keep track of which items went into this invoice
         for (DetalleComanda d : items) {
             DetalleFactura df = new DetalleFactura();
             df.setId_factura(idFactura);
@@ -369,7 +369,7 @@ public class FrmCajero extends javax.swing.JFrame {
             detalleFacturaDAO.insert(df);
         }
 
-        // si ya no queda nada pendiente, la comanda se cierra y la mesa queda libre
+        // when nothing is left the order is closed and the table is freed
         if (detallesSinFacturar(comanda.getId_comanda()).isEmpty()) {
             comandaDAO.updateEstado(comanda.getId_comanda(), "cerrada");
             liberarMesa(comanda.getId_mesa());
@@ -382,7 +382,7 @@ public class FrmCajero extends javax.swing.JFrame {
         cargarPorCobrar();
     }
 
-    /** Muestra en un cuadro las facturas que se han emitido. */
+    /** Shows the invoices already issued in a dialog. */
     private void verHistorial() {
         List<Factura> facturas = facturaDAO.findAll();
         if (facturas.isEmpty()) {
@@ -397,7 +397,7 @@ public class FrmCajero extends javax.swing.JFrame {
             String fecha = f.getFecha_emision() != null ? f.getFecha_emision().format(formatoHora) : "";
             texto += "#" + f.getId_factura() + "  comanda " + f.getId_comanda() + "  " + fecha
                     + "  ₡" + f.getTotal() + "  (" + f.getTipo() + " / " + f.getEstado() + ")\n";
-            // solo sumo las finales; las provisionales todavia no se han cobrado
+            // only the final ones are added up; the provisional ones have not been paid yet
             if ("final".equals(f.getTipo()) && f.getTotal() != null) {
                 granTotal = granTotal.add(f.getTotal());
             } else {
@@ -412,9 +412,9 @@ public class FrmCajero extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, texto, "Historial de facturas", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // ------------------ ayudas ------------------
+    // ------------------ helpers ------------------
 
-    /** Busca la factura provisional de una comanda, si el salonero la dejó. */
+    /** Finds the provisional invoice of an order, when the waiter issued one. */
     private Factura buscarProvisional(int idComanda) {
         for (Factura f : facturaDAO.findByComanda(idComanda)) {
             if ("provisional".equals(f.getTipo())) {
@@ -424,10 +424,10 @@ public class FrmCajero extends javax.swing.JFrame {
         return null;
     }
 
-    /** Devuelve los detalles de la comanda que todavia no estan en ninguna factura final. */
+    /** Returns the order details that are not part of any final invoice yet. */
     private List<DetalleComanda> detallesSinFacturar(int idComanda) {
-        // junto los detalles que ya se cobraron. La provisional que saca el salonero
-        // no cuenta, porque esa todavia no se ha cancelado en caja.
+        // collect the details already charged. The provisional invoice issued by the waiter
+        // does not count, because it has not been paid at the cashier yet.
         List<Integer> yaCobrados = new ArrayList<>();
         for (Factura f : facturaDAO.findByComanda(idComanda)) {
             if (!"final".equals(f.getTipo())) {
@@ -447,7 +447,7 @@ public class FrmCajero extends javax.swing.JFrame {
         return faltantes;
     }
 
-    /** Pone el subtotal, el IVA y el total en las etiquetas. */
+    /** Writes the subtotal, the sales tax and the total into the labels. */
     private void mostrarTotales(List<DetalleComanda> items) {
         BigDecimal subtotal = sumar(items);
         BigDecimal iva = subtotal.multiply(FacturaDAO.IVA).setScale(2, java.math.RoundingMode.HALF_UP);
@@ -456,7 +456,7 @@ public class FrmCajero extends javax.swing.JFrame {
         jLabel3.setText("Total: ₡" + subtotal.add(iva));
     }
 
-    /** Suma el precio de todos los items. */
+    /** Adds up the price of every item. */
     private BigDecimal sumar(List<DetalleComanda> items) {
         BigDecimal suma = BigDecimal.ZERO;
         for (DetalleComanda d : items) {
@@ -465,7 +465,7 @@ public class FrmCajero extends javax.swing.JFrame {
         return suma;
     }
 
-    /** Precio de una linea = precio unitario por cantidad. */
+    /** Price of one line, that is, unit price times quantity. */
     private BigDecimal totalLinea(DetalleComanda detalle) {
         if (detalle.getPrecio_unit() == null) {
             return BigDecimal.ZERO;
@@ -473,12 +473,12 @@ public class FrmCajero extends javax.swing.JFrame {
         return detalle.getPrecio_unit().multiply(new BigDecimal(detalle.getCantidad()));
     }
 
-    /** Le suma el 13% al subtotal. */
+    /** Adds the 13 percent tax to the subtotal. */
     private BigDecimal conIva(BigDecimal subtotal) {
         return subtotal.add(subtotal.multiply(FacturaDAO.IVA).setScale(2, java.math.RoundingMode.HALF_UP));
     }
 
-    /** Deja la mesa disponible otra vez. */
+    /** Makes the table available again. */
     private void liberarMesa(int idMesa) {
         for (Mesa m : mesaDAO.findAll()) {
             if (m.getId_mesa() == idMesa) {
@@ -488,7 +488,7 @@ public class FrmCajero extends javax.swing.JFrame {
         }
     }
 
-    /** Busca el número de mesa, para no mostrar el id pelado. */
+    /** Finds the table number, so the raw id is not displayed. */
     private String nombreMesa(List<Mesa> lista, int idMesa) {
         for (Mesa m : lista) {
             if (m.getId_mesa() == idMesa) {
@@ -498,7 +498,7 @@ public class FrmCajero extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Deja el detalle y los totales en blanco. */
+    /** Clears the detail table and the totals. */
     private void limpiarDetalle() {
         detallesEnPantalla = new ArrayList<>();
         ((DefaultTableModel) tblDetalleFactura.getModel()).setRowCount(0);

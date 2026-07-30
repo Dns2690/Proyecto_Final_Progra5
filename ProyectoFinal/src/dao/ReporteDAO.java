@@ -9,14 +9,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * DAO para la generación de reportes relacionados con comandas, reservas y procesos.
+ * DAO that builds the reports about orders, reservations and preparation processes.
  */
 public class ReporteDAO {
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
     /**
-     * Reporte: Cantidad de personas atendidas por día en el SALÓN.
+     * Report: number of people served per day in the DINING ROOM.
   
      */
     public Map<String, Integer> personasAtendidaXDiaSalon() throws Exception {
@@ -24,7 +24,7 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de personas atendidas por día en el BAR.
+     * Report: number of people served per day in the BAR.
   
      */
     public Map<String, Integer> personasAtendidaXDiaBar() throws Exception {
@@ -61,10 +61,10 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de comandas que se REALIZARON (creadas) en el bar,
-     * agrupadas por día. Incluye todas las comandas de origen 'bar' sin
-     * importar su estado actual.
-     * Key = fecha (yyyy-MM-dd), Value = total de comandas creadas ese día.
+     * Report: number of orders CREATED in the bar,
+     * grouped by day. It includes every order whose origin is 'bar',
+     * no matter its current status.
+     * Key = date (yyyy-MM-dd), Value = total orders created that day.
      */
     public Map<String, Integer> comandasRealizadasBar() throws Exception {
         Map<String, Integer> resultado = new LinkedHashMap<>();
@@ -89,7 +89,7 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de comandas que fueron ATENDIDAS 
+     * Report: number of orders that were SERVED
      */
     public Map<String, Integer> comandasAtendidasBar() throws Exception {
         Map<String, Integer> resultado = new LinkedHashMap<>();
@@ -114,7 +114,7 @@ public class ReporteDAO {
     }
 
     /**
-     * Reporte: Cantidad de comandas atendidas en la COCINA 
+     * Report: number of orders served by the KITCHEN
      */
     public Map<String, Integer> comandasCocinaDesglosadas() throws Exception {
         Map<String, Integer> resultado = new LinkedHashMap<>();

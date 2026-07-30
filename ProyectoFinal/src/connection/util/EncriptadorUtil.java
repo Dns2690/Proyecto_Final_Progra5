@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Clase de utilidades para encriptación y hashing.
+ * Utility class for encryption and hashing.
  */
 public final class EncriptadorUtil {
 
@@ -13,9 +13,9 @@ public final class EncriptadorUtil {
     }
 
     /**
-     * Retorna el hash MD5 de un texto dado.
-     * @param texto texto a hashear
-     * @return hash MD5 como cadena hexadecimal de 32 caracteres en minúscula
+     * Returns the MD5 hash of the given text.
+     * @param texto text to be hashed
+     * @return MD5 hash as a 32-character lowercase hexadecimal string
      */
     public static String md5(String texto) {
         if (texto == null) {

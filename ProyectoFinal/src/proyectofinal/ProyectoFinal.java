@@ -7,7 +7,7 @@ import javax.swing.UIManager;
 import vista.FrmLogin;
 
 /**
- * Clase principal del proyecto. Abre la ventana de login.
+ * Main class of the project. It opens the login window.
  *
  * @author denis
  */
@@ -15,7 +15,7 @@ public class ProyectoFinal {
 
     public static void main(String[] args) {
 
-        // le pongo el look and feel Nimbus para que no se vea tan feo
+        // set the Nimbus look and feel so the screens look better
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -27,7 +27,7 @@ public class ProyectoFinal {
             System.out.println("No se pudo cargar Nimbus: " + e.getMessage());
         }
 
-        // pruebo la conexion antes de abrir la ventana
+        // test the connection before opening any window
         ConnectionDB conexionDB = new ConnectionDB();
         Connection con = conexionDB.getConexion();
         if (con == null) {
@@ -38,7 +38,7 @@ public class ProyectoFinal {
         }
         conexionDB.closeConexion();
 
-        // abro el login
+        // open the login window
         java.awt.EventQueue.invokeLater(() -> {
             FrmLogin login = new FrmLogin();
             login.setVisible(true);

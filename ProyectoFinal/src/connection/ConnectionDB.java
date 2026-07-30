@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class ConnectionDB {
 
     /**
-    * Clase de utilidades para Conexión a la base de datos.
+    * Utility class for the database connection.
     */
 
     private static final String URL  = "jdbc:mysql://localhost:3306/restaurante_db"

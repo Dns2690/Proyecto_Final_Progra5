@@ -17,19 +17,19 @@ import model.Mesa;
 import model.Reserva;
 
 /**
- * DAO para la entidad Reserva, con operaciones CRUD y consultas por fecha y disponibilidad.
+ * DAO for the Reserva entity, with CRUD operations and queries by date and availability.
  */
 public class ReservaDAO {
 
-    /** Cuanto le damos de duracion a una reserva, para saber si dos se chocan. */
+    /** How long a reservation is assumed to hold a table, used to detect overlaps. */
     public static final int MINUTOS_RESERVA = 120;
 
-    /** Hora a la que cierra el restaurante, hasta ahi se busca mesa. */
+    /** Closing time of the restaurant; tables are searched up to this hour. */
     private static final LocalTime HORA_CIERRE = LocalTime.of(22, 0);
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
-    // 1. CREATE (Insertar nueva reserva)
+    // 1. CREATE (insert a new reservation)
     public boolean insert(Reserva reserva) {
         String sql = "INSERT INTO reserva (nombre_cliente, telefono, fecha_reserva, hora_reserva, cantidad_pers, incluye_ninos, id_mesa, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = conexionDB.getConexion();
@@ -44,7 +44,7 @@ public class ReservaDAO {
             if (reserva.getId_mesa() > 0) {
                 ps.setInt(7, reserva.getId_mesa());
             } else {
-                ps.setNull(7, Types.INTEGER); // aún sin mesa asignada
+                ps.setNull(7, Types.INTEGER); // no table assigned yet
             }
             ps.setString(8, reserva.getEstado() != null ? reserva.getEstado() : "pendiente");
 
@@ -55,7 +55,7 @@ public class ReservaDAO {
         }
     }
 
-    // 2. UPDATE (Modificar reserva existente)
+    // 2. UPDATE (change an existing reservation)
     public boolean update(Reserva reserva) {
         String sql = "UPDATE reserva SET nombre_cliente = ?, telefono = ?, fecha_reserva = ?, hora_reserva = ?, cantidad_pers = ?, incluye_ninos = ?, id_mesa = ?, estado = ? WHERE id_reserva = ?";
         try (Connection con = conexionDB.getConexion();
@@ -82,7 +82,7 @@ public class ReservaDAO {
         }
     }
 
-    // 3. UPDATE estado (pendiente / confirmada / cancelada / atendida)
+    // 3. UPDATE status (pendiente / confirmada / cancelada / atendida)
     public boolean updateEstado(int idReserva, String nuevoEstado) {
         String sql = "UPDATE reserva SET estado = ? WHERE id_reserva = ?";
         try (Connection con = conexionDB.getConexion();
@@ -97,7 +97,7 @@ public class ReservaDAO {
         }
     }
 
-    // 4. DELETE (Eliminar reserva por ID)
+    // 4. DELETE (remove a reservation by ID)
     public boolean delete(int idReserva) {
         String sql = "DELETE FROM reserva WHERE id_reserva = ?";
         try (Connection con = conexionDB.getConexion();
@@ -111,7 +111,7 @@ public class ReservaDAO {
         }
     }
 
-    // 5. READ ALL (Listar todas las reservas)
+    // 5. READ ALL (list every reservation)
     public List<Reserva> findAll() {
         String sql = "SELECT * FROM reserva";
         List<Reserva> lista = new ArrayList<>();
@@ -128,7 +128,7 @@ public class ReservaDAO {
         return lista;
     }
 
-    // 6. READ BY ID (Buscar una reserva específica)
+    // 6. READ BY ID (find one reservation)
     public Reserva findById(int idReserva) {
         String sql = "SELECT * FROM reserva WHERE id_reserva = ?";
         try (Connection con = conexionDB.getConexion();
@@ -146,7 +146,7 @@ public class ReservaDAO {
         return null;
     }
 
-    // 7. READ por fecha (agenda del día)
+    // 7. READ by date (the schedule of the day)
     public List<Reserva> findByFecha(LocalDate fecha) {
         String sql = "SELECT * FROM reserva WHERE fecha_reserva = ?";
         List<Reserva> lista = new ArrayList<>();
@@ -166,9 +166,9 @@ public class ReservaDAO {
     }
 
     /**
-     * Chequea si hay disponibilidad para una nueva reserva en la fecha y hora dadas.
-     * Devuelve true si hay menos de 10 reservas activas (no canceladas)
-     * para esa fecha y hora, false si ya hay 10 o más.
+     * Checks whether there is room for a new reservation at the given date and time.
+     * Returns true when there are fewer than 10 active (not cancelled) reservations
+     * for that date and time, and false when there are 10 or more.
      */
     public boolean findDisponibilidad(LocalDate fecha, LocalTime hora) {
         String sql = "SELECT COUNT(*) FROM reserva WHERE fecha_reserva = ? AND hora_reserva = ? AND estado <> 'cancelada'";
@@ -189,12 +189,12 @@ public class ReservaDAO {
     }
 
     /**
-     * Devuelve las mesas que no tienen reserva a esa fecha y hora.
-     * Se considera que una reserva ocupa la mesa por MINUTOS_RESERVA, asi que
-     * dos reservas se chocan si sus horas estan mas cerca que eso.
+     * Returns the tables that have no reservation at the given date and time.
+     * A reservation is assumed to hold its table for MINUTOS_RESERVA, so two
+     * reservations overlap when their times are closer than that.
      */
     public List<Mesa> findMesasLibres(LocalDate fecha, LocalTime hora) {
-        // se usa TIMEDIFF y no TIMESTAMPDIFF porque con columnas TIME este ultimo devuelve NULL
+        // TIMEDIFF is used instead of TIMESTAMPDIFF because the latter returns NULL on TIME columns
         String sql = "SELECT m.* FROM mesa m WHERE m.id_mesa NOT IN ("
                    + "  SELECT r.id_mesa FROM reserva r "
                    + "  WHERE r.fecha_reserva = ? AND r.estado <> 'cancelada' AND r.id_mesa IS NOT NULL "
@@ -226,8 +226,8 @@ public class ReservaDAO {
     }
 
     /**
-     * Busca la primera hora despues de la pedida en que se desocupan
-     * suficientes mesas. Devuelve null si ya no queda campo ese dia.
+     * Finds the first hour after the requested one where enough tables
+     * become free. Returns null when there is no room left that day.
      */
     public LocalTime proximaHoraLibre(LocalDate fecha, LocalTime desde, int mesasNecesarias) {
         LocalTime hora = desde.plusHours(1);
@@ -240,7 +240,7 @@ public class ReservaDAO {
         return null;
     }
 
-    /** Mapea la fila actual del ResultSet a un modelo Reserva. */
+    /** Maps the current ResultSet row into a Reserva object. */
     private Reserva mapRow(ResultSet rs) throws SQLException {
         Reserva r = new Reserva();
         r.setId_reserva(rs.getInt("id_reserva"));
@@ -252,7 +252,7 @@ public class ReservaDAO {
         r.setHora_reserva(horaReserva != null ? horaReserva.toLocalTime() : null);
         r.setCantidad_pers(rs.getInt("cantidad_pers"));
         r.setIncluye_ninos(rs.getBoolean("incluye_ninos"));
-        r.setId_mesa(rs.getInt("id_mesa")); // 0 cuando aún no hay mesa
+        r.setId_mesa(rs.getInt("id_mesa")); // 0 when no table has been assigned yet
         r.setEstado(rs.getString("estado"));
         Timestamp fechaCreacion = rs.getTimestamp("fecha_creacion");
         r.setFecha_creacion(fechaCreacion != null ? fechaCreacion.toLocalDateTime() : null);

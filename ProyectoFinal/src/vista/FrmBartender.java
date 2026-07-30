@@ -29,7 +29,7 @@ import model.ProcesoCocina;
 import session.SesionActual;
 
 /**
- * Pantalla del bar: atiende las bebidas pendientes y puede crear sus propias comandas.
+ * Bar screen: it serves the pending drinks and can create its own orders.
  *
  * @author valer
  */
@@ -37,7 +37,7 @@ public class FrmBartender extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmBartender.class.getName());
 
-    // una comanda tiene 20 minutos para ser servida
+    // an order has 20 minutes to be served
     private static final int LIMITE_MINUTOS = 20;
 
     private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
@@ -215,7 +215,7 @@ public class FrmBartender extends javax.swing.JFrame {
         crearComandaBar();
     }//GEN-LAST:event_btnCrearComandaBarActionPerformed
 
-    /** Trae las comandas con bebidas que el bar todavia no ha entregado. */
+    /** Loads the orders with drinks the bar has not delivered yet. */
     private void cargarPendientes() {
         pendientes = barDAO.findPendientes();
         List<Mesa> todasLasMesas = mesaDAO.findAll();
@@ -239,7 +239,7 @@ public class FrmBartender extends javax.swing.JFrame {
         ((DefaultTableModel) tblDetalleComandaBar.getModel()).setRowCount(0);
     }
 
-    /** Muestra solo las bebidas de la comanda seleccionada. */
+    /** Shows only the drinks of the selected order. */
     private void verDetalle() {
         int fila = tblComandasBar.getSelectedRow();
         if (fila < 0) {
@@ -258,7 +258,7 @@ public class FrmBartender extends javax.swing.JFrame {
         }
     }
 
-    /** Marca las bebidas como listas y revisa si la cocina ya terminó. */
+    /** Marks the drinks as ready and checks whether the kitchen is done. */
     private void marcarLista() {
         int fila = tblComandasBar.getSelectedRow();
         if (fila < 0) {
@@ -275,7 +275,7 @@ public class FrmBartender extends javax.swing.JFrame {
             return;
         }
 
-        // la comanda queda lista solo si la cocina tambien terminó lo suyo
+        // the order becomes ready only when the kitchen finished its part too
         ProcesoCocina procesoCocina = cocinaDAO.findByComanda(proceso.getId_comanda());
         if (procesoCocina == null || procesoCocina.getHora_lista() != null) {
             comandaDAO.updateEstado(proceso.getId_comanda(), "lista");
@@ -289,19 +289,19 @@ public class FrmBartender extends javax.swing.JFrame {
     }
 
     /**
-     * Crea una comanda del bar (sin mesa). El cliente del bar puede pedir bebidas
-     * y tambien comida; si pide comida esa parte se manda a la cocina.
+     * Creates a bar order, which has no table. A bar customer may order drinks
+     * and food as well; the food part is sent to the kitchen.
      */
     private void crearComandaBar() {
         List<DetalleComanda> nuevaOrden = new ArrayList<>();
 
-        // voy preguntando item por item hasta que le den cancelar o digan que no
+        // ask item by item until the user cancels or answers no
         while (true) {
             Object[] opciones = {"Bebida", "Comida"};
             int cual = JOptionPane.showOptionDialog(this, "¿Qué va a agregar?", "Comanda del bar",
                     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
             if (cual != 0 && cual != 1) {
-                break; // le dieron cerrar
+                break; // the dialog was closed
             }
             boolean esBebida = (cual == 0);
 
@@ -372,7 +372,7 @@ public class FrmBartender extends javax.swing.JFrame {
         Comanda comanda = new Comanda();
         comanda.setORIGEN("bar");
         comanda.setCodigo_emp(SesionActual.getCodigo());
-        comanda.setId_mesa(0); // las comandas del bar no tienen mesa
+        comanda.setId_mesa(0); // bar orders have no table
         comanda.setHora_orden(LocalDateTime.now());
         comanda.setEstado("abierta");
 
@@ -400,7 +400,7 @@ public class FrmBartender extends javax.swing.JFrame {
             proceso.setHora_recibida(LocalDateTime.now());
             barDAO.insert(proceso);
         }
-        // lo que pidieron de comer se va para la cocina, igual que una comanda de salon
+        // whatever was ordered to eat goes to the kitchen, just like a dining room order
         if (hayComida) {
             ProcesoCocina proceso = new ProcesoCocina();
             proceso.setId_comanda(idComanda);
@@ -416,7 +416,7 @@ public class FrmBartender extends javax.swing.JFrame {
         cargarPendientes();
     }
 
-    /** Minutos que lleva esperando el pedido en el bar. */
+    /** Minutes the order has been waiting in the bar. */
     private long minutosEsperando(ProcesoBar proceso) {
         if (proceso.getHora_recibida() == null) {
             return 0;
@@ -424,7 +424,7 @@ public class FrmBartender extends javax.swing.JFrame {
         return Duration.between(proceso.getHora_recibida(), LocalDateTime.now()).toMinutes();
     }
 
-    /** Busca el número de mesa, para no mostrar el id pelado. */
+    /** Finds the table number, so the raw id is not displayed. */
     private String nombreMesa(List<Mesa> lista, int idMesa) {
         for (Mesa m : lista) {
             if (m.getId_mesa() == idMesa) {
@@ -434,7 +434,7 @@ public class FrmBartender extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Convierte el texto a numero, devuelve -1 si no es un numero. */
+    /** Converts the text into a number, or -1 when it is not a number. */
     private int leerEntero(String texto) {
         try {
             return Integer.parseInt(texto.trim());

@@ -16,7 +16,7 @@ public class Comida {
     
     private int id_comida;
     private String nombre;
-    private int id_categoria; // FK categoria_comida
+    private int id_categoria; // FK to categoria_comida
     private String descripcion;
     private BigDecimal precio;
     private int activo;

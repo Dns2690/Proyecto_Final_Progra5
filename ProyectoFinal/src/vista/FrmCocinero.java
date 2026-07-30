@@ -24,7 +24,7 @@ import model.ProcesoCocina;
 import session.SesionActual;
 
 /**
- * Pantalla de la cocina: muestra las comandas pendientes y las marca como listas.
+ * Kitchen screen: it shows the pending orders and marks them as ready.
  *
  * @author valer
  */
@@ -32,7 +32,7 @@ public class FrmCocinero extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmCocinero.class.getName());
 
-    // una comanda tiene 20 minutos para ser servida
+    // an order has 20 minutes to be served
     private static final int LIMITE_MINUTOS = 20;
 
     private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
@@ -194,7 +194,7 @@ public class FrmCocinero extends javax.swing.JFrame {
         marcarLista();
     }//GEN-LAST:event_btnMarcarListaCocinaActionPerformed
 
-    /** Trae las comandas que la cocina todavia no ha terminado. */
+    /** Loads the orders the kitchen has not finished yet. */
     private void cargarPendientes() {
         pendientes = cocinaDAO.findPendientes();
         List<Mesa> todasLasMesas = mesaDAO.findAll();
@@ -208,7 +208,7 @@ public class FrmCocinero extends javax.swing.JFrame {
                 continue;
             }
             String hora = p.getHora_recibida() != null ? p.getHora_recibida().format(formatoHora) : "";
-            // si ya pasó de los 20 minutos lo aviso en la misma tabla
+            // when it went over the 20 minutes it is flagged in the table itself
             String estado = c.getEstado();
             if (minutosEsperando(p) > LIMITE_MINUTOS) {
                 estado = estado + " (atrasada)";
@@ -219,7 +219,7 @@ public class FrmCocinero extends javax.swing.JFrame {
         limpiarDetalle();
     }
 
-    /** Muestra solo los platos de la comanda seleccionada (las bebidas van al bar). */
+    /** Shows only the dishes of the selected order; the drinks belong to the bar. */
     private void verDetalle() {
         int fila = tblComandasCocina.getSelectedRow();
         if (fila < 0) {
@@ -242,7 +242,7 @@ public class FrmCocinero extends javax.swing.JFrame {
         }
     }
 
-    /** Marca la comanda como lista en cocina y avisa al salonero. */
+    /** Marks the order as ready in the kitchen and notifies the waiter. */
     private void marcarLista() {
         int fila = tblComandasCocina.getSelectedRow();
         if (fila < 0) {
@@ -259,7 +259,7 @@ public class FrmCocinero extends javax.swing.JFrame {
             return;
         }
 
-        // la comanda queda lista solo si el bar tambien terminó lo suyo
+        // the order becomes ready only when the bar finished its part too
         ProcesoBar procesoBar = barDAO.findByComanda(proceso.getId_comanda());
         if (procesoBar == null || procesoBar.getHora_lista() != null) {
             comandaDAO.updateEstado(proceso.getId_comanda(), "lista");
@@ -272,12 +272,12 @@ public class FrmCocinero extends javax.swing.JFrame {
         cargarPendientes();
     }
 
-    /** Deja vacía la tabla del detalle. */
+    /** Empties the detail table. */
     private void limpiarDetalle() {
         ((DefaultTableModel) tblDetalleComandaCocina.getModel()).setRowCount(0);
     }
 
-    /** Minutos que lleva esperando el pedido en cocina. */
+    /** Minutes the order has been waiting in the kitchen. */
     private long minutosEsperando(ProcesoCocina proceso) {
         if (proceso.getHora_recibida() == null) {
             return 0;
@@ -285,7 +285,7 @@ public class FrmCocinero extends javax.swing.JFrame {
         return Duration.between(proceso.getHora_recibida(), LocalDateTime.now()).toMinutes();
     }
 
-    /** Busca el número de mesa, para no mostrar el id pelado. */
+    /** Finds the table number, so the raw id is not displayed. */
     private String nombreMesa(List<Mesa> lista, int idMesa) {
         for (Mesa m : lista) {
             if (m.getId_mesa() == idMesa) {

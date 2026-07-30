@@ -31,6 +31,9 @@ replay_pid*
 # AGREGADOS PARA TU ENTORNO (MAC & NETBEANS)
 # ==========================================
 
+# Archivos temporales de Word (los crea al abrir un .docx)
+~$*
+
 # macOS (Para ignorar los archivos ocultos del sistema)
 .DS_Store
 .AppleDouble

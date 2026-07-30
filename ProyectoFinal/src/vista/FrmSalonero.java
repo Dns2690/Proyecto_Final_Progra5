@@ -9,6 +9,7 @@ import dao.BebidaDAO;
 import dao.ComandaDAO;
 import dao.ComidaDAO;
 import dao.DetalleComandaDAO;
+import dao.FacturaDAO;
 import dao.MesaDAO;
 import dao.ProcesoBarDAO;
 import dao.ProcesoCocinaDAO;
@@ -29,6 +30,7 @@ import model.Bebida;
 import model.Comanda;
 import model.Comida;
 import model.DetalleComanda;
+import model.Factura;
 import model.Mesa;
 import model.ProcesoBar;
 import model.ProcesoCocina;
@@ -48,6 +50,9 @@ public class FrmSalonero extends javax.swing.JFrame {
     // una comanda tiene 20 minutos para ser servida
     private static final int LIMITE_MINUTOS = 20;
 
+    // cuantas personas caben en una mesa, para saber cuantas mesas ocupa una reserva
+    private static final int CAPACIDAD_MESA = 4;
+
     private final MesaDAO mesaDAO = new MesaDAO();
     private final ComidaDAO comidaDAO = new ComidaDAO();
     private final BebidaDAO bebidaDAO = new BebidaDAO();
@@ -58,9 +63,11 @@ public class FrmSalonero extends javax.swing.JFrame {
     private final SeccionSalonDAO seccionDAO = new SeccionSalonDAO();
     private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
     private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
+    private final FacturaDAO facturaDAO = new FacturaDAO();
 
-    // formato para mostrar las horas
+    // formatos para mostrar las horas
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final DateTimeFormatter formatoSoloHora = DateTimeFormatter.ofPattern("HH:mm");
 
     private List<Mesa> mesas = new ArrayList<>();            // mesas de mi seccion
     private final List<DetalleComanda> orden = new ArrayList<>(); // items que voy agregando
@@ -644,19 +651,7 @@ public class FrmSalonero extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCerrarComandaActionPerformed
 
     private void btnConsultarDisponibilidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarDisponibilidadActionPerformed
-        LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
-        LocalTime hora = leerHora(txtHoraReserva.getText().trim());
-        if (fecha == null || hora == null) {
-            JOptionPane.showMessageDialog(this, "Revise la fecha (aaaa-mm-dd) y la hora (hh:mm).");
-            return;
-        }
-        if (reservaDAO.findDisponibilidad(fecha, hora)) {
-            IblDisponibilidad.setForeground(new java.awt.Color(0, 128, 0));
-            IblDisponibilidad.setText("Sí hay campo");
-        } else {
-            IblDisponibilidad.setForeground(java.awt.Color.RED);
-            IblDisponibilidad.setText("Lleno a esa hora");
-        }
+        consultarDisponibilidad();
     }//GEN-LAST:event_btnConsultarDisponibilidadActionPerformed
 
     private void btnGuardarReservaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarReservaActionPerformed
@@ -725,13 +720,85 @@ public class FrmSalonero extends javax.swing.JFrame {
             }
         }
 
-        if (atrasadas > 0) {
+        pintarNotificacion(todasLasMesas, atrasadas);
+    }
+
+    /**
+     * Arma el aviso de los pedidos listos. Por cada comanda lista muestra la mesa,
+     * la hora en que cocina o el bar la terminaron y qué quedó listo.
+     */
+    private void pintarNotificacion(List<Mesa> todasLasMesas, int atrasadas) {
+        String aviso = "";
+        int listas = 0;
+
+        for (Comanda c : misComandas) {
+            if (!"lista".equals(c.getEstado())) {
+                continue;
+            }
+            listas++;
+            if (listas > 3) {
+                continue; // no lleno la pantalla, abajo digo cuantas faltan
+            }
+            aviso = aviso + "PEDIDO LISTO &nbsp;|&nbsp; " + nombreMesa(todasLasMesas, c.getId_mesa())
+                    + " &nbsp;|&nbsp; comanda #" + c.getId_comanda()
+                    + " &nbsp;|&nbsp; " + horaNotificacion(c.getId_comanda())
+                    + "<br>&nbsp;&nbsp;&nbsp;&nbsp;" + queEstaListo(c.getId_comanda()) + "<br>";
+        }
+
+        if (listas > 3) {
+            aviso = aviso + "y " + (listas - 3) + " pedido(s) más listos<br>";
+        }
+
+        if (listas > 0) {
+            lblNotificacion.setForeground(new java.awt.Color(0, 100, 0));
+            if (atrasadas > 0) {
+                aviso = aviso + "<font color='red'>Atención: " + atrasadas
+                        + " comanda(s) pasaron los " + LIMITE_MINUTOS + " minutos</font>";
+            }
+            lblNotificacion.setText("<html>" + aviso + "</html>");
+        } else if (atrasadas > 0) {
             lblNotificacion.setForeground(java.awt.Color.RED);
             lblNotificacion.setText("Atención: " + atrasadas + " comanda(s) pasaron los " + LIMITE_MINUTOS + " minutos");
         } else {
             lblNotificacion.setForeground(new java.awt.Color(0, 128, 0));
-            lblNotificacion.setText("Todas las comandas están a tiempo");
+            lblNotificacion.setText("No hay pedidos listos por servir");
         }
+    }
+
+    /** Hora en que se terminó de preparar la comanda (la más tardía entre cocina y bar). */
+    private String horaNotificacion(int idComanda) {
+        LocalDateTime hora = null;
+        ProcesoCocina pc = cocinaDAO.findByComanda(idComanda);
+        if (pc != null && pc.getHora_lista() != null) {
+            hora = pc.getHora_lista();
+        }
+        ProcesoBar pb = barDAO.findByComanda(idComanda);
+        if (pb != null && pb.getHora_lista() != null && (hora == null || pb.getHora_lista().isAfter(hora))) {
+            hora = pb.getHora_lista();
+        }
+        return hora != null ? "listo a las " + hora.format(formatoSoloHora) : "sin hora";
+    }
+
+    /** Lista los platos y bebidas que quedaron listos en esa comanda. */
+    private String queEstaListo(int idComanda) {
+        String platos = "";
+        String bebidas = "";
+        for (DetalleComanda d : detalleDAO.findByComanda(idComanda)) {
+            String linea = d.getCantidad() + " " + detalleDAO.getNombreItem(d);
+            if ("comida".equals(d.getTipo_item())) {
+                platos = platos.isEmpty() ? linea : platos + ", " + linea;
+            } else {
+                bebidas = bebidas.isEmpty() ? linea : bebidas + ", " + linea;
+            }
+        }
+        String texto = "";
+        if (!platos.isEmpty()) {
+            texto = "Platillos: " + platos;
+        }
+        if (!bebidas.isEmpty()) {
+            texto = texto.isEmpty() ? "Bebidas: " + bebidas : texto + " &nbsp;·&nbsp; Bebidas: " + bebidas;
+        }
+        return texto;
     }
 
     /** Llena la tabla de reservas. */
@@ -895,13 +962,109 @@ public class FrmSalonero extends javax.swing.JFrame {
             }
         }
 
+        generarFacturaProvisional(comanda);
+
         cargarSeccionYMesas();
         cargarMisComandas();
     }
 
+    /**
+     * Al cerrar la comanda se saca la factura provisional, que es la que el
+     * cliente ve y la que despues pasa a la caja para ser cancelada.
+     */
+    private void generarFacturaProvisional(Comanda comanda) {
+        // si ya tiene una provisional no saco otra
+        for (Factura f : facturaDAO.findByComanda(comanda.getId_comanda())) {
+            if ("provisional".equals(f.getTipo())) {
+                return;
+            }
+        }
+
+        List<DetalleComanda> detalles = detalleDAO.findByComanda(comanda.getId_comanda());
+        BigDecimal subtotal = BigDecimal.ZERO;
+        String lineas = "";
+        for (DetalleComanda d : detalles) {
+            BigDecimal linea = d.getPrecio_unit().multiply(new BigDecimal(d.getCantidad()));
+            subtotal = subtotal.add(linea);
+            lineas = lineas + d.getCantidad() + " x " + detalleDAO.getNombreItem(d) + "   ₡" + linea + "\n";
+        }
+
+        Factura factura = new Factura();
+        factura.setId_comanda(comanda.getId_comanda());
+        factura.setCodigo_cajero(SesionActual.getCodigo()); // quien la genero
+        factura.setFecha_emision(LocalDateTime.now());
+        factura.setSubtotal(subtotal); // el DAO le calcula el IVA
+        factura.setTipo("provisional");
+        factura.setEstado("pendiente");
+
+        int idFactura = facturaDAO.insertGetId(factura);
+        if (idFactura <= 0) {
+            JOptionPane.showMessageDialog(this, "La comanda se cerró pero no se pudo sacar la factura provisional.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JOptionPane.showMessageDialog(this,
+                "FACTURA PROVISIONAL #" + idFactura + "\n"
+                + "Comanda #" + comanda.getId_comanda() + "   Mesa " + numeroDeMesa(comanda.getId_mesa()) + "\n"
+                + "Salonero: " + SesionActual.getNombre() + "\n\n"
+                + lineas + "\n"
+                + "Total antes de impuesto: ₡" + factura.getSubtotal() + "\n"
+                + "IVA (13%): ₡" + factura.getImpuesto() + "\n"
+                + "Total a pagar: ₡" + factura.getTotal() + "\n\n"
+                + "Pasa a caja para ser cancelada.",
+                "Factura provisional", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /** Devuelve el numero de mesa buscandolo en la base. */
+    private String numeroDeMesa(int idMesa) {
+        for (Mesa m : mesaDAO.findAll()) {
+            if (m.getId_mesa() == idMesa) {
+                return String.valueOf(m.getNumero_mesa());
+            }
+        }
+        return "-";
+    }
+
     // ------------------ reservas ------------------
 
-    /** Guarda una reserva nueva si hay campo a esa hora. */
+    /**
+     * Vista preliminar de la reserva: muestra cuales mesas estan libres a esa fecha
+     * y hora, cuantas se necesitan segun la cantidad de personas, y si no hay,
+     * a que hora se desocupa una.
+     */
+    private void consultarDisponibilidad() {
+        LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
+        LocalTime hora = leerHora(txtHoraReserva.getText().trim());
+        if (fecha == null || hora == null) {
+            JOptionPane.showMessageDialog(this, "Revise la fecha (aaaa-mm-dd) y la hora (hh:mm).");
+            return;
+        }
+
+        int personas = (Integer) spnCantidadPersonas.getValue();
+        int mesasNecesarias = mesasQueOcupa(personas);
+        List<Mesa> libres = reservaDAO.findMesasLibres(fecha, hora);
+
+        if (libres.size() >= mesasNecesarias) {
+            IblDisponibilidad.setForeground(new java.awt.Color(0, 100, 0));
+            IblDisponibilidad.setText("<html>Sí hay campo a las " + hora.format(formatoSoloHora)
+                    + "<br>" + personas + " personas ocupan " + mesasNecesarias + " mesa(s)"
+                    + "<br>Mesas libres: " + listaDeMesas(libres) + "</html>");
+        } else {
+            LocalTime proxima = reservaDAO.proximaHoraLibre(fecha, hora, mesasNecesarias);
+            IblDisponibilidad.setForeground(java.awt.Color.RED);
+            String texto = "<html>No hay campo a las " + hora.format(formatoSoloHora)
+                    + "<br>Se necesitan " + mesasNecesarias + " mesa(s) y solo hay " + libres.size();
+            if (proxima != null) {
+                texto = texto + "<br>Queda mesa a las " + proxima.format(formatoSoloHora);
+            } else {
+                texto = texto + "<br>Ese día ya no queda campo";
+            }
+            IblDisponibilidad.setText(texto + "</html>");
+        }
+    }
+
+    /** Guarda una reserva nueva, asignandole una mesa libre. */
     private void guardarReserva() {
         String nombre = txtNombreCliente.getText().trim();
         if (nombre.isEmpty()) {
@@ -911,7 +1074,7 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         LocalDate fecha = leerFecha(txtFechaReserva.getText().trim());
         if (fecha == null) {
-            JOptionPane.showMessageDialog(this, "La fecha debe ser aaaa-mm-dd (ejemplo 2026-07-28).");
+            JOptionPane.showMessageDialog(this, "La fecha debe ser aaaa-mm-dd (ejemplo " + LocalDate.now() + ").");
             return;
         }
 
@@ -921,27 +1084,65 @@ public class FrmSalonero extends javax.swing.JFrame {
             return;
         }
 
-        if (!reservaDAO.findDisponibilidad(fecha, hora)) {
-            JOptionPane.showMessageDialog(this, "Ya no hay campo a esa hora.");
+        int personas = (Integer) spnCantidadPersonas.getValue();
+        int mesasNecesarias = mesasQueOcupa(personas);
+        List<Mesa> libres = reservaDAO.findMesasLibres(fecha, hora);
+
+        // reviso que haya mesa antes de guardar
+        if (libres.size() < mesasNecesarias) {
+            LocalTime proxima = reservaDAO.proximaHoraLibre(fecha, hora, mesasNecesarias);
+            String mensaje = "No hay mesa para " + personas + " persona(s) a las " + hora.format(formatoSoloHora) + ".";
+            if (proxima != null) {
+                mensaje = mensaje + "\nLa próxima hora con campo es a las " + proxima.format(formatoSoloHora) + ".";
+            } else {
+                mensaje = mensaje + "\nEse día ya no queda campo; puede esperar en el bar.";
+            }
+            JOptionPane.showMessageDialog(this, mensaje, "Sin disponibilidad", JOptionPane.WARNING_MESSAGE);
+            consultarDisponibilidad();
             return;
         }
+
+        Mesa asignada = libres.get(0);
 
         Reserva reserva = new Reserva();
         reserva.setNombre_cliente(nombre);
         reserva.setTelefono(txtTelefonoCliente.getText().trim());
         reserva.setFecha_reserva(fecha);
         reserva.setHora_reserva(hora);
-        reserva.setCantidad_pers((Integer) spnCantidadPersonas.getValue());
+        reserva.setCantidad_pers(personas);
         reserva.setIncluye_ninos(chkIncluyeNinos.isSelected());
+        reserva.setId_mesa(asignada.getId_mesa());
         reserva.setEstado("pendiente");
 
         if (reservaDAO.insert(reserva)) {
-            JOptionPane.showMessageDialog(this, "Reserva guardada.");
+            JOptionPane.showMessageDialog(this, "Reserva guardada en la mesa " + asignada.getNumero_mesa() + ".");
             limpiarReserva();
             cargarReservas();
         } else {
             JOptionPane.showMessageDialog(this, "No se pudo guardar la reserva.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /** Cuantas mesas ocupa un grupo, segun lo que cabe en cada mesa. */
+    private int mesasQueOcupa(int personas) {
+        int mesas = personas / CAPACIDAD_MESA;
+        if (personas % CAPACIDAD_MESA > 0) {
+            mesas++;
+        }
+        return mesas;
+    }
+
+    /** Arma el texto con los numeros de mesa, cortando si son muchas. */
+    private String listaDeMesas(List<Mesa> mesasLibres) {
+        String texto = "";
+        for (int i = 0; i < mesasLibres.size() && i < 8; i++) {
+            texto = texto.isEmpty() ? "" + mesasLibres.get(i).getNumero_mesa()
+                                    : texto + ", " + mesasLibres.get(i).getNumero_mesa();
+        }
+        if (mesasLibres.size() > 8) {
+            texto = texto + " y " + (mesasLibres.size() - 8) + " más";
+        }
+        return texto;
     }
 
     /** Pone en cancelada la reserva seleccionada. */

@@ -335,15 +335,27 @@ public class FrmCajero extends javax.swing.JFrame {
             return;
         }
 
-        Factura factura = new Factura();
-        factura.setId_comanda(comanda.getId_comanda());
+        // si el salonero dejó una factura provisional, esa misma es la que se cancela aqui
+        Factura factura = buscarProvisional(comanda.getId_comanda());
+        boolean eraProvisional = factura != null;
+        if (!eraProvisional) {
+            factura = new Factura();
+            factura.setId_comanda(comanda.getId_comanda());
+        }
         factura.setCodigo_cajero(SesionActual.getCodigo());
         factura.setFecha_emision(LocalDateTime.now());
-        factura.setSubtotal(subtotal); // el DAO calcula impuesto y total con el 13%
+        factura.setSubtotal(subtotal);
+        factura.setImpuesto(null); // en null para que el DAO los calcule con el 13%
+        factura.setTotal(null);
         factura.setTipo("final");
         factura.setEstado("pagada");
 
-        int idFactura = facturaDAO.insertGetId(factura);
+        int idFactura;
+        if (eraProvisional) {
+            idFactura = facturaDAO.update(factura) ? factura.getId_factura() : -1;
+        } else {
+            idFactura = facturaDAO.insertGetId(factura);
+        }
         if (idFactura <= 0) {
             JOptionPane.showMessageDialog(this, "No se pudo generar la factura.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -380,26 +392,47 @@ public class FrmCajero extends javax.swing.JFrame {
 
         String texto = "Facturas emitidas:\n\n";
         BigDecimal granTotal = BigDecimal.ZERO;
+        int provisionales = 0;
         for (Factura f : facturas) {
             String fecha = f.getFecha_emision() != null ? f.getFecha_emision().format(formatoHora) : "";
             texto += "#" + f.getId_factura() + "  comanda " + f.getId_comanda() + "  " + fecha
-                    + "  ₡" + f.getTotal() + "  (" + f.getEstado() + ")\n";
-            if (f.getTotal() != null) {
+                    + "  ₡" + f.getTotal() + "  (" + f.getTipo() + " / " + f.getEstado() + ")\n";
+            // solo sumo las finales; las provisionales todavia no se han cobrado
+            if ("final".equals(f.getTipo()) && f.getTotal() != null) {
                 granTotal = granTotal.add(f.getTotal());
+            } else {
+                provisionales++;
             }
         }
-        texto += "\nTotal facturado: ₡" + granTotal;
+        texto += "\nTotal cobrado (facturas finales): ₡" + granTotal;
+        if (provisionales > 0) {
+            texto += "\nProvisionales pendientes de cobro: " + provisionales;
+        }
 
         JOptionPane.showMessageDialog(this, texto, "Historial de facturas", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // ------------------ ayudas ------------------
 
-    /** Devuelve los detalles de la comanda que todavia no estan en ninguna factura. */
+    /** Busca la factura provisional de una comanda, si el salonero la dejó. */
+    private Factura buscarProvisional(int idComanda) {
+        for (Factura f : facturaDAO.findByComanda(idComanda)) {
+            if ("provisional".equals(f.getTipo())) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    /** Devuelve los detalles de la comanda que todavia no estan en ninguna factura final. */
     private List<DetalleComanda> detallesSinFacturar(int idComanda) {
-        // primero junto los detalles que ya se cobraron en facturas anteriores
+        // junto los detalles que ya se cobraron. La provisional que saca el salonero
+        // no cuenta, porque esa todavia no se ha cancelado en caja.
         List<Integer> yaCobrados = new ArrayList<>();
         for (Factura f : facturaDAO.findByComanda(idComanda)) {
+            if (!"final".equals(f.getTipo())) {
+                continue;
+            }
             for (DetalleFactura df : detalleFacturaDAO.findByFactura(f.getId_factura())) {
                 yaCobrados.add(df.getId_detalle());
             }

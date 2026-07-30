@@ -13,12 +13,19 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import model.Mesa;
 import model.Reserva;
 
 /**
  * DAO para la entidad Reserva, con operaciones CRUD y consultas por fecha y disponibilidad.
  */
 public class ReservaDAO {
+
+    /** Cuanto le damos de duracion a una reserva, para saber si dos se chocan. */
+    public static final int MINUTOS_RESERVA = 120;
+
+    /** Hora a la que cierra el restaurante, hasta ahi se busca mesa. */
+    private static final LocalTime HORA_CIERRE = LocalTime.of(22, 0);
 
     private final ConnectionDB conexionDB = new ConnectionDB();
 
@@ -179,6 +186,58 @@ public class ReservaDAO {
             System.out.println("Error al consultar disponibilidad: " + e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * Devuelve las mesas que no tienen reserva a esa fecha y hora.
+     * Se considera que una reserva ocupa la mesa por MINUTOS_RESERVA, asi que
+     * dos reservas se chocan si sus horas estan mas cerca que eso.
+     */
+    public List<Mesa> findMesasLibres(LocalDate fecha, LocalTime hora) {
+        // se usa TIMEDIFF y no TIMESTAMPDIFF porque con columnas TIME este ultimo devuelve NULL
+        String sql = "SELECT m.* FROM mesa m WHERE m.id_mesa NOT IN ("
+                   + "  SELECT r.id_mesa FROM reserva r "
+                   + "  WHERE r.fecha_reserva = ? AND r.estado <> 'cancelada' AND r.id_mesa IS NOT NULL "
+                   + "    AND ABS(TIME_TO_SEC(TIMEDIFF(r.hora_reserva, ?))) < ? * 60 "
+                   + ") ORDER BY m.numero_mesa";
+
+        List<Mesa> lista = new ArrayList<>();
+        try (Connection con = conexionDB.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(fecha));
+            ps.setTime(2, Time.valueOf(hora));
+            ps.setInt(3, MINUTOS_RESERVA);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Mesa m = new Mesa();
+                    m.setId_mesa(rs.getInt("id_mesa"));
+                    m.setNumero_mesa(rs.getInt("numero_mesa"));
+                    m.setId_seccion(rs.getInt("id_seccion"));
+                    m.setDisponible(rs.getInt("disponible"));
+                    lista.add(m);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al buscar mesas libres: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    /**
+     * Busca la primera hora despues de la pedida en que se desocupan
+     * suficientes mesas. Devuelve null si ya no queda campo ese dia.
+     */
+    public LocalTime proximaHoraLibre(LocalDate fecha, LocalTime desde, int mesasNecesarias) {
+        LocalTime hora = desde.plusHours(1);
+        while (!hora.isAfter(HORA_CIERRE)) {
+            if (findMesasLibres(fecha, hora).size() >= mesasNecesarias) {
+                return hora;
+            }
+            hora = hora.plusHours(1);
+        }
+        return null;
     }
 
     /** Mapea la fila actual del ResultSet a un modelo Reserva. */

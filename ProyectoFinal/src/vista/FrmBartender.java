@@ -6,10 +6,12 @@ package vista;
 
 import dao.BebidaDAO;
 import dao.ComandaDAO;
+import dao.ComidaDAO;
 import dao.DetalleComandaDAO;
 import dao.MesaDAO;
 import dao.ProcesoBarDAO;
 import dao.ProcesoCocinaDAO;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +21,7 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import model.Bebida;
 import model.Comanda;
+import model.Comida;
 import model.DetalleComanda;
 import model.Mesa;
 import model.ProcesoBar;
@@ -42,6 +45,7 @@ public class FrmBartender extends javax.swing.JFrame {
     private final ComandaDAO comandaDAO = new ComandaDAO();
     private final DetalleComandaDAO detalleDAO = new DetalleComandaDAO();
     private final BebidaDAO bebidaDAO = new BebidaDAO();
+    private final ComidaDAO comidaDAO = new ComidaDAO();
     private final MesaDAO mesaDAO = new MesaDAO();
 
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -284,24 +288,61 @@ public class FrmBartender extends javax.swing.JFrame {
         cargarPendientes();
     }
 
-    /** Crea una comanda del bar (sin mesa) preguntando las bebidas una por una. */
+    /**
+     * Crea una comanda del bar (sin mesa). El cliente del bar puede pedir bebidas
+     * y tambien comida; si pide comida esa parte se manda a la cocina.
+     */
     private void crearComandaBar() {
         List<DetalleComanda> nuevaOrden = new ArrayList<>();
 
-        // voy preguntando bebidas hasta que le den cancelar o digan que no
+        // voy preguntando item por item hasta que le den cancelar o digan que no
         while (true) {
-            String codigo = JOptionPane.showInputDialog(this, "Código de la bebida:");
+            Object[] opciones = {"Bebida", "Comida"};
+            int cual = JOptionPane.showOptionDialog(this, "¿Qué va a agregar?", "Comanda del bar",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+            if (cual != 0 && cual != 1) {
+                break; // le dieron cerrar
+            }
+            boolean esBebida = (cual == 0);
+
+            String codigo = JOptionPane.showInputDialog(this,
+                    esBebida ? "Código de la bebida:" : "Código del plato:");
             if (codigo == null) {
                 break;
             }
 
-            Bebida bebida = bebidaDAO.findById(leerEntero(codigo));
-            if (bebida == null) {
-                JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
-                continue;
+            String nombre;
+            int idItem;
+            BigDecimal precio;
+            if (esBebida) {
+                Bebida bebida = bebidaDAO.findById(leerEntero(codigo));
+                if (bebida == null) {
+                    JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
+                    continue;
+                }
+                if (bebida.getActivo() == 0) {
+                    JOptionPane.showMessageDialog(this, "Esa bebida no está disponible hoy.");
+                    continue;
+                }
+                nombre = bebida.getNombre();
+                idItem = bebida.getId_bebida();
+                precio = bebida.getPrecio();
+            } else {
+                Comida comida = comidaDAO.findById(leerEntero(codigo));
+                if (comida == null) {
+                    JOptionPane.showMessageDialog(this, "No existe una comida con ese código.");
+                    continue;
+                }
+                if (comida.getActivo() == 0) {
+                    JOptionPane.showMessageDialog(this, "Ese plato no está disponible hoy.");
+                    continue;
+                }
+                nombre = comida.getNombre();
+                idItem = comida.getId_comida();
+                precio = comida.getPrecio();
             }
 
-            String cantidadTexto = JOptionPane.showInputDialog(this, "Cantidad de " + bebida.getNombre() + ":", "1");
+            String cantidadTexto = JOptionPane.showInputDialog(this, "Cantidad de " + nombre + ":", "1");
             if (cantidadTexto == null) {
                 continue;
             }
@@ -312,13 +353,13 @@ public class FrmBartender extends javax.swing.JFrame {
             }
 
             DetalleComanda detalle = new DetalleComanda();
-            detalle.setTipo_item("bebida");
-            detalle.setId_item(bebida.getId_bebida());
+            detalle.setTipo_item(esBebida ? "bebida" : "comida");
+            detalle.setId_item(idItem);
             detalle.setCantidad(cantidad);
-            detalle.setPrecio_unit(bebida.getPrecio());
+            detalle.setPrecio_unit(precio);
             nuevaOrden.add(detalle);
 
-            int otra = JOptionPane.showConfirmDialog(this, "¿Agregar otra bebida?", "Comanda del bar", JOptionPane.YES_NO_OPTION);
+            int otra = JOptionPane.showConfirmDialog(this, "¿Agregar algo más?", "Comanda del bar", JOptionPane.YES_NO_OPTION);
             if (otra != JOptionPane.YES_OPTION) {
                 break;
             }
@@ -341,17 +382,37 @@ public class FrmBartender extends javax.swing.JFrame {
             return;
         }
 
+        boolean hayComida = false;
+        boolean hayBebida = false;
         for (DetalleComanda d : nuevaOrden) {
             d.setId_comanda(idComanda);
             detalleDAO.insert(d);
+            if ("comida".equals(d.getTipo_item())) {
+                hayComida = true;
+            } else {
+                hayBebida = true;
+            }
         }
 
-        ProcesoBar proceso = new ProcesoBar();
-        proceso.setId_comanda(idComanda);
-        proceso.setHora_recibida(LocalDateTime.now());
-        barDAO.insert(proceso);
+        if (hayBebida) {
+            ProcesoBar proceso = new ProcesoBar();
+            proceso.setId_comanda(idComanda);
+            proceso.setHora_recibida(LocalDateTime.now());
+            barDAO.insert(proceso);
+        }
+        // lo que pidieron de comer se va para la cocina, igual que una comanda de salon
+        if (hayComida) {
+            ProcesoCocina proceso = new ProcesoCocina();
+            proceso.setId_comanda(idComanda);
+            proceso.setHora_recibida(LocalDateTime.now());
+            cocinaDAO.insert(proceso);
+        }
 
-        JOptionPane.showMessageDialog(this, "Comanda #" + idComanda + " creada con " + nuevaOrden.size() + " bebida(s).");
+        String aviso = "Comanda #" + idComanda + " creada con " + nuevaOrden.size() + " ítem(s).";
+        if (hayComida) {
+            aviso = aviso + "\nLa comida se mandó a la cocina.";
+        }
+        JOptionPane.showMessageDialog(this, aviso);
         cargarPendientes();
     }
 

@@ -5,6 +5,8 @@
 package vista;
 
 import dao.BebidaDAO;
+import dao.CategoriaBebidaDAO;
+import dao.CategoriaComidaDAO;
 import dao.ComandaDAO;
 import dao.ComidaDAO;
 import dao.DetalleComandaDAO;
@@ -20,6 +22,8 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import model.Bebida;
+import model.CategoriaBebida;
+import model.CategoriaComida;
 import model.Comanda;
 import model.Comida;
 import model.DetalleComanda;
@@ -47,6 +51,8 @@ public class FrmBartender extends javax.swing.JFrame {
     private final BebidaDAO bebidaDAO = new BebidaDAO();
     private final ComidaDAO comidaDAO = new ComidaDAO();
     private final MesaDAO mesaDAO = new MesaDAO();
+    private final CategoriaBebidaDAO categoriaBebidaDAO = new CategoriaBebidaDAO();
+    private final CategoriaComidaDAO categoriaComidaDAO = new CategoriaComidaDAO();
 
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -292,6 +298,96 @@ public class FrmBartender extends javax.swing.JFrame {
      * Creates a bar order, which has no table. A bar customer may order drinks
      * and food as well; the food part is sent to the kitchen.
      */
+    /**
+     * Shows the available drinks in a dropdown, with their category and price, so the bartender
+     * does not have to remember any code. Returns null when the dialog was cancelled.
+     */
+    private Bebida escogerBebida() {
+        List<Bebida> disponibles = new ArrayList<>();
+        for (Bebida b : bebidaDAO.findAll()) {
+            if (b.getActivo() == 1) {
+                disponibles.add(b);
+            }
+        }
+        if (disponibles.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay bebidas disponibles hoy.");
+            return null;
+        }
+
+        // each line of the dropdown matches, in the same position, one drink of the list
+        String[] opciones = new String[disponibles.size()];
+        for (int i = 0; i < disponibles.size(); i++) {
+            Bebida b = disponibles.get(i);
+            opciones[i] = b.getNombre() + "   -   " + categoriaDeBebida(b.getId_categoria())
+                    + "   -   ₡" + b.getPrecio();
+        }
+
+        Object escogida = JOptionPane.showInputDialog(this, "Escoja la bebida:", "Comanda del bar",
+                JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+        if (escogida == null) {
+            return null;
+        }
+        for (int i = 0; i < opciones.length; i++) {
+            if (opciones[i].equals(escogida)) {
+                return disponibles.get(i);
+            }
+        }
+        return null;
+    }
+
+    /** Same as {@link #escogerBebida()} but with the dishes, for when the bar customer wants to eat. */
+    private Comida escogerComida() {
+        List<Comida> disponibles = new ArrayList<>();
+        for (Comida c : comidaDAO.findAll()) {
+            if (c.getActivo() == 1) {
+                disponibles.add(c);
+            }
+        }
+        if (disponibles.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay platos disponibles hoy.");
+            return null;
+        }
+
+        String[] opciones = new String[disponibles.size()];
+        for (int i = 0; i < disponibles.size(); i++) {
+            Comida c = disponibles.get(i);
+            opciones[i] = c.getNombre() + "   -   " + categoriaDeComida(c.getId_categoria())
+                    + "   -   ₡" + c.getPrecio();
+        }
+
+        Object escogido = JOptionPane.showInputDialog(this, "Escoja el plato:", "Comanda del bar",
+                JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+        if (escogido == null) {
+            return null;
+        }
+        for (int i = 0; i < opciones.length; i++) {
+            if (opciones[i].equals(escogido)) {
+                return disponibles.get(i);
+            }
+        }
+        return null;
+    }
+
+    /** Name of the drink category, to show it next to the drink instead of its id. */
+    private String categoriaDeBebida(int idCategoria) {
+        for (CategoriaBebida c : categoriaBebidaDAO.findAll()) {
+            if (c.getId_categoria() == idCategoria) {
+                return c.getNombre();
+            }
+        }
+        return "?";
+    }
+
+    /** Name of the food category. */
+    private String categoriaDeComida(int idCategoria) {
+        for (CategoriaComida c : categoriaComidaDAO.findAll()) {
+            if (c.getId_categoria() == idCategoria) {
+                return c.getNombre();
+            }
+        }
+        return "?";
+    }
+
     private void crearComandaBar() {
         List<DetalleComanda> nuevaOrden = new ArrayList<>();
 
@@ -305,37 +401,21 @@ public class FrmBartender extends javax.swing.JFrame {
             }
             boolean esBebida = (cual == 0);
 
-            String codigo = JOptionPane.showInputDialog(this,
-                    esBebida ? "Código de la bebida:" : "Código del plato:");
-            if (codigo == null) {
-                break;
-            }
-
             String nombre;
             int idItem;
             BigDecimal precio;
             if (esBebida) {
-                Bebida bebida = bebidaDAO.findById(leerEntero(codigo));
+                Bebida bebida = escogerBebida();
                 if (bebida == null) {
-                    JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
-                    continue;
-                }
-                if (bebida.getActivo() == 0) {
-                    JOptionPane.showMessageDialog(this, "Esa bebida no está disponible hoy.");
-                    continue;
+                    break;
                 }
                 nombre = bebida.getNombre();
                 idItem = bebida.getId_bebida();
                 precio = bebida.getPrecio();
             } else {
-                Comida comida = comidaDAO.findById(leerEntero(codigo));
+                Comida comida = escogerComida();
                 if (comida == null) {
-                    JOptionPane.showMessageDialog(this, "No existe una comida con ese código.");
-                    continue;
-                }
-                if (comida.getActivo() == 0) {
-                    JOptionPane.showMessageDialog(this, "Ese plato no está disponible hoy.");
-                    continue;
+                    break;
                 }
                 nombre = comida.getNombre();
                 idItem = comida.getId_comida();

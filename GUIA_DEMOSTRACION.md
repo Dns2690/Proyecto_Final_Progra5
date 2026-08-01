@@ -217,7 +217,7 @@ Nada de esto está en los 6 minutos, pero está hecho y se llega en un clic:
 | Validaciones antes de borrar | Admin → **Mesas**: borrar una **Ocupada** avisa; **Secciones**: borrar una con mesas dice cuántas tiene |
 | Producto inactivo | La **Malteada Vainilla** está inactiva a propósito: **no aparece** en la lista del salonero |
 | Cuenta separada | Caja → **Detalle Caja** → marcar **"Cuenta Separada?"** → seleccionar líneas → **Dividir Cuenta**. La comanda solo se cierra cuando no queda nada pendiente |
-| Comanda propia del bar | Bar → **Crear Comanda**: pregunta ítem por ítem; no ocupa mesa, y si el cliente pide comida **esa parte se manda a la cocina** |
+| Comanda propia del bar | Bar → **Crear Comanda**: pregunta ítem por ítem, escogiendo del desplegable (nombre, categoría y precio, sin códigos). No ocupa mesa, y si el cliente pide comida **esa parte se manda a la cocina** |
 | Los otros 4 reportes | Admin → **Reportes**: personas por día (salón y bar), comandas realizadas y atendidas en el bar |
 
 ---

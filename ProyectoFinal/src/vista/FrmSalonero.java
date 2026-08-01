@@ -6,6 +6,8 @@ package vista;
 
 import dao.AsignacionSeccionDAO;
 import dao.BebidaDAO;
+import dao.CategoriaBebidaDAO;
+import dao.CategoriaComidaDAO;
 import dao.ComandaDAO;
 import dao.ComidaDAO;
 import dao.DetalleComandaDAO;
@@ -27,6 +29,8 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import model.AsignacionSeccion;
 import model.Bebida;
+import model.CategoriaBebida;
+import model.CategoriaComida;
 import model.Comanda;
 import model.Comida;
 import model.DetalleComanda;
@@ -64,6 +68,8 @@ public class FrmSalonero extends javax.swing.JFrame {
     private final ProcesoCocinaDAO cocinaDAO = new ProcesoCocinaDAO();
     private final ProcesoBarDAO barDAO = new ProcesoBarDAO();
     private final FacturaDAO facturaDAO = new FacturaDAO();
+    private final CategoriaComidaDAO categoriaComidaDAO = new CategoriaComidaDAO();
+    private final CategoriaBebidaDAO categoriaBebidaDAO = new CategoriaBebidaDAO();
 
     // formats used to display the times
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -73,6 +79,15 @@ public class FrmSalonero extends javax.swing.JFrame {
     private final List<DetalleComanda> orden = new ArrayList<>(); // items being added to the current order
     private List<Comanda> misComandas = new ArrayList<>();
     private List<Reserva> reservas = new ArrayList<>();
+
+    // menu behind the combos: each list matches, row by row, what the combo shows
+    private List<CategoriaComida> categoriasComida = new ArrayList<>();
+    private List<CategoriaBebida> categoriasBebida = new ArrayList<>();
+    private List<Comida> platosDelCombo = new ArrayList<>();
+    private List<Bebida> bebidasDelCombo = new ArrayList<>();
+
+    // true while the combos are being filled, so their events do not fire in the middle
+    private boolean cargandoCombos = false;
 
     /**
      * Creates new form FrmSalonero
@@ -105,14 +120,14 @@ public class FrmSalonero extends javax.swing.JFrame {
         tabSalonero = new javax.swing.JTabbedPane();
         pnlMesasComanda = new javax.swing.JPanel();
         cmbMesaAsignada = new javax.swing.JComboBox<>();
-        txtCodigoPlato = new javax.swing.JTextField();
-        txtNombrePlato = new javax.swing.JTextField();
+        cmbCategoriaPlato = new javax.swing.JComboBox<>();
+        cmbPlato = new javax.swing.JComboBox<>();
         jLabel1 = new javax.swing.JLabel();
         spnCantidadPlato = new javax.swing.JSpinner();
         btnAgregarPlato = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
-        txtCodigoBebida = new javax.swing.JTextField();
-        txtNombreBebida = new javax.swing.JTextField();
+        cmbCategoriaBebida = new javax.swing.JComboBox<>();
+        cmbBebida = new javax.swing.JComboBox<>();
         spnCantidadBebida = new javax.swing.JSpinner();
         btnAgregarBebida = new javax.swing.JButton();
         scrOrdenActual = new javax.swing.JScrollPane();
@@ -158,46 +173,38 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnCerrarSesionSal.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesionSal.setText("Cerrar Sesión");
-        btnCerrarSesionSal.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnCerrarSesionSalActionPerformed(evt);
-        });
+        btnCerrarSesionSal.addActionListener(this::btnCerrarSesionSalActionPerformed);
 
         cmbMesaAsignada.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         cmbMesaAsignada.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4" }));
 
-        txtCodigoPlato.addActionListener((java.awt.event.ActionEvent evt) -> {
-            txtCodigoPlatoActionPerformed(evt);
-        });
+        cmbCategoriaPlato.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        cmbCategoriaPlato.addActionListener(this::cmbCategoriaPlatoActionPerformed);
 
-        txtNombrePlato.setEditable(false);
+        cmbPlato.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel1.setText("Código Plato");
+        jLabel1.setText("Plato (categoría y platillo)");
 
         spnCantidadPlato.setModel(new javax.swing.SpinnerNumberModel(1, 1, 20, 1));
 
         btnAgregarPlato.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnAgregarPlato.setText("Agregar Plato");
-        btnAgregarPlato.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnAgregarPlatoActionPerformed(evt);
-        });
+        btnAgregarPlato.addActionListener(this::btnAgregarPlatoActionPerformed);
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel2.setText("Código Bebida");
+        jLabel2.setText("Bebida (categoría y bebida)");
 
-        txtCodigoBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            txtCodigoBebidaActionPerformed(evt);
-        });
+        cmbCategoriaBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        cmbCategoriaBebida.addActionListener(this::cmbCategoriaBebidaActionPerformed);
 
-        txtNombreBebida.setEditable(false);
+        cmbBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
 
         spnCantidadBebida.setModel(new javax.swing.SpinnerNumberModel(1, 1, 20, 1));
 
         btnAgregarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnAgregarBebida.setText("Agregar Bebida");
-        btnAgregarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnAgregarBebidaActionPerformed(evt);
-        });
+        btnAgregarBebida.addActionListener(this::btnAgregarBebidaActionPerformed);
 
         tblOrdenActual.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -211,15 +218,11 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnQuitarItem.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnQuitarItem.setText("Quitar Ítem");
-        btnQuitarItem.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnQuitarItemActionPerformed(evt);
-        });
+        btnQuitarItem.addActionListener(this::btnQuitarItemActionPerformed);
 
         btnGenerarComanda.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGenerarComanda.setText("Generar Comanda ");
-        btnGenerarComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGenerarComandaActionPerformed(evt);
-        });
+        btnGenerarComanda.addActionListener(this::btnGenerarComandaActionPerformed);
 
         javax.swing.GroupLayout pnlMesasComandaLayout = new javax.swing.GroupLayout(pnlMesasComanda);
         pnlMesasComanda.setLayout(pnlMesasComandaLayout);
@@ -230,24 +233,24 @@ public class FrmSalonero extends javax.swing.JFrame {
                 .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(pnlMesasComandaLayout.createSequentialGroup()
                 .addGroup(pnlMesasComandaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1)
                     .addComponent(btnAgregarPlato)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtNombreBebida)
-                    .addComponent(txtCodigoBebida)
+                    .addComponent(jLabel2)
+                    .addComponent(cmbBebida, 0, 270, Short.MAX_VALUE)
+                    .addComponent(cmbCategoriaBebida, 0, 270, Short.MAX_VALUE)
                     .addComponent(spnCantidadPlato)
-                    .addComponent(txtNombrePlato)
-                    .addComponent(txtCodigoPlato)
+                    .addComponent(cmbPlato, 0, 270, Short.MAX_VALUE)
+                    .addComponent(cmbCategoriaPlato, 0, 270, Short.MAX_VALUE)
                     .addComponent(cmbMesaAsignada, 0, 270, Short.MAX_VALUE)
                     .addComponent(spnCantidadBebida))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 21, Short.MAX_VALUE)
                 .addGroup(pnlMesasComandaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(scrOrdenActual, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(pnlMesasComandaLayout.createSequentialGroup()
                         .addComponent(btnQuitarItem, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(36, 36, 36)
-                        .addComponent(btnGenerarComanda, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(scrOrdenActual, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnGenerarComanda)))
+                .addGap(14, 14, 14))
         );
         pnlMesasComandaLayout.setVerticalGroup(
             pnlMesasComandaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -259,9 +262,9 @@ public class FrmSalonero extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(jLabel1)
                         .addGap(18, 18, 18)
-                        .addComponent(txtCodigoPlato, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbCategoriaPlato, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtNombrePlato, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbPlato, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(spnCantidadPlato, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -269,9 +272,9 @@ public class FrmSalonero extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtCodigoBebida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbCategoriaBebida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtNombreBebida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbBebida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(spnCantidadBebida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -282,7 +285,7 @@ public class FrmSalonero extends javax.swing.JFrame {
                         .addGroup(pnlMesasComandaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnGenerarComanda)
                             .addComponent(btnQuitarItem))))
-                .addContainerGap(95, Short.MAX_VALUE))
+                .addContainerGap(60, Short.MAX_VALUE))
         );
 
         tabSalonero.addTab("Mesas y Comandas", pnlMesasComanda);
@@ -321,21 +324,15 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnVerDetalleComanda.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnVerDetalleComanda.setText("Detalle Comanda ");
-        btnVerDetalleComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnVerDetalleComandaActionPerformed(evt);
-        });
+        btnVerDetalleComanda.addActionListener(this::btnVerDetalleComandaActionPerformed);
 
         btnCerrarComanda.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarComanda.setText("Cerrar Comanda");
-        btnCerrarComanda.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnCerrarComandaActionPerformed(evt);
-        });
+        btnCerrarComanda.addActionListener(this::btnCerrarComandaActionPerformed);
 
         btnRefrescarComandas.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnRefrescarComandas.setText("Refrescar Comandas ");
-        btnRefrescarComandas.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnRefrescarComandasActionPerformed(evt);
-        });
+        btnRefrescarComandas.addActionListener(this::btnRefrescarComandasActionPerformed);
 
         javax.swing.GroupLayout pnlMisComandasLayout = new javax.swing.GroupLayout(pnlMisComandas);
         pnlMisComandas.setLayout(pnlMisComandasLayout);
@@ -405,27 +402,19 @@ public class FrmSalonero extends javax.swing.JFrame {
 
         btnConsultarDisponibilidad.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnConsultarDisponibilidad.setText("Disponibilidad ");
-        btnConsultarDisponibilidad.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnConsultarDisponibilidadActionPerformed(evt);
-        });
+        btnConsultarDisponibilidad.addActionListener(this::btnConsultarDisponibilidadActionPerformed);
 
         btnGuardarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarReserva.setText("Guardar Reserva");
-        btnGuardarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarReservaActionPerformed(evt);
-        });
+        btnGuardarReserva.addActionListener(this::btnGuardarReservaActionPerformed);
 
         btnCancelarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCancelarReserva.setText("Cancelar Reserva ");
-        btnCancelarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnCancelarReservaActionPerformed(evt);
-        });
+        btnCancelarReserva.addActionListener(this::btnCancelarReservaActionPerformed);
 
         btnLimpiarReserva.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarReserva.setText("Limpiar Reserva");
-        btnLimpiarReserva.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarReservaActionPerformed(evt);
-        });
+        btnLimpiarReserva.addActionListener(this::btnLimpiarReservaActionPerformed);
 
         IblDisponibilidad.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
 
@@ -580,47 +569,39 @@ public class FrmSalonero extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_btnCerrarSesionSalActionPerformed
 
-    private void txtCodigoPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoPlatoActionPerformed
-        // pressing enter on the code shows the name of the dish
-        Comida comida = comidaDAO.findById(leerEntero(txtCodigoPlato.getText()));
-        txtNombrePlato.setText(comida != null ? comida.getNombre() : "No existe ese código");
-    }//GEN-LAST:event_txtCodigoPlatoActionPerformed
+    private void cmbCategoriaPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCategoriaPlatoActionPerformed
+        // changing the category redraws the list of dishes
+        if (!cargandoCombos) {
+            cargarPlatosDelCombo();
+        }
+    }//GEN-LAST:event_cmbCategoriaPlatoActionPerformed
 
-    private void txtCodigoBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodigoBebidaActionPerformed
-        // pressing enter on the code shows the name of the drink
-        Bebida bebida = bebidaDAO.findById(leerEntero(txtCodigoBebida.getText()));
-        txtNombreBebida.setText(bebida != null ? bebida.getNombre() : "No existe ese código");
-    }//GEN-LAST:event_txtCodigoBebidaActionPerformed
+    private void cmbCategoriaBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCategoriaBebidaActionPerformed
+        // changing the category redraws the list of drinks
+        if (!cargandoCombos) {
+            cargarBebidasDelCombo();
+        }
+    }//GEN-LAST:event_cmbCategoriaBebidaActionPerformed
 
     private void btnAgregarPlatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarPlatoActionPerformed
-        Comida comida = comidaDAO.findById(leerEntero(txtCodigoPlato.getText()));
-        if (comida == null) {
-            JOptionPane.showMessageDialog(this, "No existe una comida con ese código.");
+        int fila = cmbPlato.getSelectedIndex();
+        if (fila < 0 || fila >= platosDelCombo.size()) {
+            JOptionPane.showMessageDialog(this, "Escoja un plato de la lista.");
             return;
         }
-        if (comida.getActivo() == 0) {
-            JOptionPane.showMessageDialog(this, "Ese plato no está disponible hoy.");
-            return;
-        }
+        Comida comida = platosDelCombo.get(fila);
         agregarItem("comida", comida.getId_comida(), (Integer) spnCantidadPlato.getValue(), comida.getPrecio());
-        txtCodigoPlato.setText("");
-        txtNombrePlato.setText("");
         spnCantidadPlato.setValue(1);
     }//GEN-LAST:event_btnAgregarPlatoActionPerformed
 
     private void btnAgregarBebidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarBebidaActionPerformed
-        Bebida bebida = bebidaDAO.findById(leerEntero(txtCodigoBebida.getText()));
-        if (bebida == null) {
-            JOptionPane.showMessageDialog(this, "No existe una bebida con ese código.");
+        int fila = cmbBebida.getSelectedIndex();
+        if (fila < 0 || fila >= bebidasDelCombo.size()) {
+            JOptionPane.showMessageDialog(this, "Escoja una bebida de la lista.");
             return;
         }
-        if (bebida.getActivo() == 0) {
-            JOptionPane.showMessageDialog(this, "Esa bebida no está disponible hoy.");
-            return;
-        }
+        Bebida bebida = bebidasDelCombo.get(fila);
         agregarItem("bebida", bebida.getId_bebida(), (Integer) spnCantidadBebida.getValue(), bebida.getPrecio());
-        txtCodigoBebida.setText("");
-        txtNombreBebida.setText("");
         spnCantidadBebida.setValue(1);
     }//GEN-LAST:event_btnAgregarBebidaActionPerformed
 
@@ -678,8 +659,79 @@ public class FrmSalonero extends javax.swing.JFrame {
         txtFechaReserva.setText(LocalDate.now().toString());
         txtHoraReserva.setText("19:00");
         cargarSeccionYMesas();
+        cargarMenu();
         cargarMisComandas();
         cargarReservas();
+    }
+
+    /**
+     * Fills the menu combos: first the categories and then the items of the selected one,
+     * so the waiter picks from the menu instead of remembering codes.
+     */
+    private void cargarMenu() {
+        cargandoCombos = true;
+
+        categoriasComida = categoriaComidaDAO.findAll();
+        cmbCategoriaPlato.removeAllItems();
+        cmbCategoriaPlato.addItem("Todas las categorías");
+        for (CategoriaComida c : categoriasComida) {
+            cmbCategoriaPlato.addItem(c.getNombre());
+        }
+
+        categoriasBebida = categoriaBebidaDAO.findAll();
+        cmbCategoriaBebida.removeAllItems();
+        cmbCategoriaBebida.addItem("Todas las categorías");
+        for (CategoriaBebida c : categoriasBebida) {
+            cmbCategoriaBebida.addItem(c.getNombre());
+        }
+
+        cargandoCombos = false;
+
+        cargarPlatosDelCombo();
+        cargarBebidasDelCombo();
+    }
+
+    /** Shows the dishes of the chosen category, only the ones available today. */
+    private void cargarPlatosDelCombo() {
+        // the first option of the combo is "all categories", the rest follow the list order
+        int fila = cmbCategoriaPlato.getSelectedIndex();
+        int idCategoria = fila > 0 ? categoriasComida.get(fila - 1).getId_categoria() : 0;
+
+        platosDelCombo = new ArrayList<>();
+        cargandoCombos = true;
+        cmbPlato.removeAllItems();
+        for (Comida c : comidaDAO.findAll()) {
+            if (c.getActivo() == 0) {
+                continue; // not available today
+            }
+            if (idCategoria > 0 && c.getId_categoria() != idCategoria) {
+                continue; // it is from another category
+            }
+            platosDelCombo.add(c);
+            cmbPlato.addItem(c.getNombre() + "   ₡" + c.getPrecio());
+        }
+        cargandoCombos = false;
+    }
+
+    /** Shows the drinks of the chosen category, only the ones available today. */
+    private void cargarBebidasDelCombo() {
+        int fila = cmbCategoriaBebida.getSelectedIndex();
+        int idCategoria = fila > 0 ? categoriasBebida.get(fila - 1).getId_categoria() : 0;
+
+        bebidasDelCombo = new ArrayList<>();
+        cargandoCombos = true;
+        cmbBebida.removeAllItems();
+        for (Bebida b : bebidaDAO.findAll()) {
+            if (b.getActivo() == 0) {
+                continue;
+            }
+            if (idCategoria > 0 && b.getId_categoria() != idCategoria) {
+                continue;
+            }
+            bebidasDelCombo.add(b);
+            cmbBebida.addItem(b.getNombre() + "   ₡" + b.getPrecio());
+        }
+        cargandoCombos = false;
     }
 
     /** Finds the section assigned for today and fills the combo with its tables. */
@@ -1204,15 +1256,6 @@ public class FrmSalonero extends javax.swing.JFrame {
         return "-";
     }
 
-    /** Converts the text into a number, or -1 when it is not a number. */
-    private int leerEntero(String texto) {
-        try {
-            return Integer.parseInt(texto.trim());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
     /** Converts the text into a date, or null when it is not well written. */
     private LocalDate leerFecha(String texto) {
         try {
@@ -1273,7 +1316,11 @@ public class FrmSalonero extends javax.swing.JFrame {
     private javax.swing.JButton btnRefrescarComandas;
     private javax.swing.JButton btnVerDetalleComanda;
     private javax.swing.JCheckBox chkIncluyeNinos;
+    private javax.swing.JComboBox<String> cmbBebida;
+    private javax.swing.JComboBox<String> cmbCategoriaBebida;
+    private javax.swing.JComboBox<String> cmbCategoriaPlato;
     private javax.swing.JComboBox<String> cmbMesaAsignada;
+    private javax.swing.JComboBox<String> cmbPlato;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -1297,13 +1344,9 @@ public class FrmSalonero extends javax.swing.JFrame {
     private javax.swing.JTable tblMisComandas;
     private javax.swing.JTable tblOrdenActual;
     private javax.swing.JTable tblReservas;
-    private javax.swing.JTextField txtCodigoBebida;
-    private javax.swing.JTextField txtCodigoPlato;
     private javax.swing.JTextField txtFechaReserva;
     private javax.swing.JTextField txtHoraReserva;
-    private javax.swing.JTextField txtNombreBebida;
     private javax.swing.JTextField txtNombreCliente;
-    private javax.swing.JTextField txtNombrePlato;
     private javax.swing.JTextField txtTelefonoCliente;
     // End of variables declaration//GEN-END:variables
 }

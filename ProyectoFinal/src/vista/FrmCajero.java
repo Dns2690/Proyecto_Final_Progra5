@@ -375,9 +375,27 @@ public class FrmCajero extends javax.swing.JFrame {
             liberarMesa(comanda.getId_mesa());
         }
 
-        JOptionPane.showMessageDialog(this,
-                "Factura #" + idFactura + " generada.\nSubtotal: ₡" + factura.getSubtotal()
-                + "\nIVA (13%): ₡" + factura.getImpuesto() + "\nTotal: ₡" + factura.getTotal());
+        // the receipt the customer takes: same items that were just charged
+        String lineas = "";
+        for (DetalleComanda d : items) {
+            lineas = lineas + Tiquete.item(d.getCantidad(), detalleDAO.getNombreItem(d),
+                    d.getPrecio_unit().multiply(new BigDecimal(d.getCantidad())));
+        }
+
+        String tiquete = Tiquete.cabecera("FACTURA", "No. " + idFactura)
+                + Tiquete.dato("Fecha", factura.getFecha_emision().format(formatoHora))
+                + Tiquete.dato("Comanda", "#" + comanda.getId_comanda())
+                + Tiquete.dato("Cajero", SesionActual.getNombre())
+                + Tiquete.dato("Cuenta", queSeCobra)
+                + Tiquete.titulosItems()
+                + lineas
+                + Tiquete.separador()
+                + Tiquete.total("Subtotal", factura.getSubtotal())
+                + Tiquete.total("IVA (13%)", factura.getImpuesto())
+                + Tiquete.total("TOTAL PAGADO", factura.getTotal())
+                + Tiquete.pie("Gracias por su visita");
+
+        Tiquete.mostrar(this, "Factura " + idFactura, tiquete);
 
         cargarPorCobrar();
     }

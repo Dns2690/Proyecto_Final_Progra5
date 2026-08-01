@@ -1038,7 +1038,7 @@ public class FrmSalonero extends javax.swing.JFrame {
         for (DetalleComanda d : detalles) {
             BigDecimal linea = d.getPrecio_unit().multiply(new BigDecimal(d.getCantidad()));
             subtotal = subtotal.add(linea);
-            lineas = lineas + d.getCantidad() + " x " + detalleDAO.getNombreItem(d) + "   ₡" + linea + "\n";
+            lineas = lineas + Tiquete.item(d.getCantidad(), detalleDAO.getNombreItem(d), linea);
         }
 
         Factura factura = new Factura();
@@ -1056,16 +1056,20 @@ public class FrmSalonero extends javax.swing.JFrame {
             return;
         }
 
-        JOptionPane.showMessageDialog(this,
-                "FACTURA PROVISIONAL #" + idFactura + "\n"
-                + "Comanda #" + comanda.getId_comanda() + "   Mesa " + numeroDeMesa(comanda.getId_mesa()) + "\n"
-                + "Salonero: " + SesionActual.getNombre() + "\n\n"
-                + lineas + "\n"
-                + "Total antes de impuesto: ₡" + factura.getSubtotal() + "\n"
-                + "IVA (13%): ₡" + factura.getImpuesto() + "\n"
-                + "Total a pagar: ₡" + factura.getTotal() + "\n\n"
-                + "Pasa a caja para ser cancelada.",
-                "Factura provisional", JOptionPane.INFORMATION_MESSAGE);
+        String tiquete = Tiquete.cabecera("FACTURA PROVISIONAL", "No. " + idFactura)
+                + Tiquete.dato("Fecha", factura.getFecha_emision().format(formatoHora))
+                + Tiquete.dato("Comanda", "#" + comanda.getId_comanda()
+                        + "      Mesa " + numeroDeMesa(comanda.getId_mesa()))
+                + Tiquete.dato("Atiende", SesionActual.getNombre())
+                + Tiquete.titulosItems()
+                + lineas
+                + Tiquete.separador()
+                + Tiquete.total("Subtotal", factura.getSubtotal())
+                + Tiquete.total("IVA (13%)", factura.getImpuesto())
+                + Tiquete.total("TOTAL A PAGAR", factura.getTotal())
+                + Tiquete.pie("Pasa a caja para ser cancelada");
+
+        Tiquete.mostrar(this, "Factura provisional", tiquete);
     }
 
     /** Returns the table number, looking it up in the database. */

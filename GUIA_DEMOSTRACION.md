@@ -12,11 +12,16 @@ el salón, se reparte entre cocina y bar, vuelve al salonero y termina cobrada e
 
 1. **Encender MySQL** y confirmar que existe `restaurante_db`.
 
-2. **Restaurar el respaldo**, para arrancar siempre con los mismos datos:
+2. **Correr el script de la base**, para arrancar siempre con los mismos datos:
    ```
-   mysql -u root -p < restaurante_db_dump.sql
+   mysql -u root -p < ScriptPROG4.sql
    ```
-   > Ojo: esto borra la base actual y la vuelve a crear.
+   O en Workbench: `File > Open SQL Script` y darle a **Execute all** (el rayo).
+
+   > Ojo: el script arranca borrando la base y volviéndola a crear, así que se puede correr
+   > las veces que sea. No hay que crear la base a mano ni escoger el esquema antes.
+   > `restaurante_db_dump.sql` es el mismo contenido en formato de respaldo de MySQL, por si
+   > se prefiere restaurar así.
 
 3. **Generar la rotación del día.** Entrar como `admin` / `admin123` (radio **Administrador**),
    pestaña **Rotación** → la fecha de hoy ya viene puesta → **Guardar** → responder **Sí** a

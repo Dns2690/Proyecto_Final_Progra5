@@ -22,6 +22,9 @@ public final class Tiquete {
     // how many characters wide the paper is
     private static final int ANCHO = 46;
 
+    // the invoice list needs a wider paper than a receipt to fit all its columns
+    private static final int ANCHO_LISTA = 54;
+
     // a few extra pixels so the last character never touches the border
     private static final int HOLGURA = 10;
 
@@ -33,14 +36,14 @@ public final class Tiquete {
 
     /** Title of the receipt, with the restaurant on top and the invoice number below. */
     public static String cabecera(String tipo, String numero) {
-        return repetir('=') + "\n"
-                + centrado("RESTAURANTE UISIL") + "\n"
-                + centrado("San Jose, Costa Rica") + "\n"
-                + centrado("Ced. Juridica 3-101-000000") + "\n"
-                + repetir('=') + "\n"
-                + centrado(tipo) + "\n"
-                + centrado(numero) + "\n"
-                + repetir('-') + "\n";
+        return repetir('=', ANCHO) + "\n"
+                + centrado("RESTAURANTE UISIL", ANCHO) + "\n"
+                + centrado("San José, Costa Rica", ANCHO) + "\n"
+                + centrado("Céd. Jurídica 3-101-000000", ANCHO) + "\n"
+                + repetir('=', ANCHO) + "\n"
+                + centrado(tipo, ANCHO) + "\n"
+                + centrado(numero, ANCHO) + "\n"
+                + repetir('-', ANCHO) + "\n";
     }
 
     /** One line of the header block, like "Fecha:   01/08/2026 16:11". */
@@ -50,9 +53,9 @@ public final class Tiquete {
 
     /** The titles of the item columns. */
     public static String titulosItems() {
-        return repetir('-') + "\n"
-                + String.format("%-4s %-26s %13s%n", "CANT", "DESCRIPCION", "IMPORTE CRC")
-                + repetir('-') + "\n";
+        return repetir('-', ANCHO) + "\n"
+                + String.format("%-4s %-26s %13s%n", "CANT", "DESCRIPCIÓN", "IMPORTE CRC")
+                + repetir('-', ANCHO) + "\n";
     }
 
     /** One item line: quantity, description and amount, with the amount to the right. */
@@ -67,13 +70,56 @@ public final class Tiquete {
 
     /** Closing message of the receipt. */
     public static String pie(String mensaje) {
-        return repetir('=') + "\n" + centrado(mensaje) + "\n" + repetir('=') + "\n";
+        return repetir('=', ANCHO) + "\n" + centrado(mensaje, ANCHO) + "\n" + repetir('=', ANCHO) + "\n";
     }
 
     /** A separating line. */
     public static String separador() {
-        return repetir('-') + "\n";
+        return repetir('-', ANCHO) + "\n";
     }
+
+    // ------------------ listings, like the invoice history ------------------
+
+    /** Title of a listing. Same look as a receipt, only on wider paper. */
+    public static String cabeceraLista(String titulo) {
+        return repetir('=', ANCHO_LISTA) + "\n"
+                + centrado("RESTAURANTE UISIL", ANCHO_LISTA) + "\n"
+                + centrado(titulo, ANCHO_LISTA) + "\n"
+                + repetir('=', ANCHO_LISTA) + "\n";
+    }
+
+    /** The column titles of the invoice history. */
+    public static String titulosHistorial() {
+        return String.format("%-5s %7s %-14s %13s %-11s%n",
+                "FACT", "COMANDA", "FECHA", "TOTAL CRC", "ESTADO")
+                + repetir('-', ANCHO_LISTA) + "\n";
+    }
+
+    /** One invoice of the history. */
+    public static String lineaHistorial(int idFactura, int idComanda, String fecha,
+            BigDecimal total, String estado) {
+        return String.format("%-5s %7d %-14s %13s %-11s%n",
+                "#" + idFactura, idComanda, fecha, monto(total), estado);
+    }
+
+    /** A totals line of a listing, pushed against the right margin. */
+    public static String totalLista(String etiqueta, BigDecimal valor) {
+        return String.format("%" + ANCHO_LISTA + "s%n", etiqueta + ":  " + monto(valor));
+    }
+
+    /** A separating line of a listing. */
+    public static String separadorLista() {
+        return repetir('-', ANCHO_LISTA) + "\n";
+    }
+
+    /** Closing message of a listing. */
+    public static String pieLista(String mensaje) {
+        return repetir('=', ANCHO_LISTA) + "\n"
+                + centrado(mensaje, ANCHO_LISTA) + "\n"
+                + repetir('=', ANCHO_LISTA) + "\n";
+    }
+
+    // ------------------ showing it ------------------
 
     /** Shows the receipt inside a dialog, on white paper with its border. */
     public static void mostrar(Component padre, String titulo, String tiquete) {
@@ -122,16 +168,16 @@ public final class Tiquete {
     }
 
     /** Centers the text on the width of the paper. */
-    private static String centrado(String texto) {
-        if (texto.length() >= ANCHO) {
+    private static String centrado(String texto, int ancho) {
+        if (texto.length() >= ancho) {
             return texto;
         }
-        int izquierda = (ANCHO - texto.length()) / 2;
+        int izquierda = (ancho - texto.length()) / 2;
         return " ".repeat(izquierda) + texto;
     }
 
     /** A full line of the same character. */
-    private static String repetir(char c) {
-        return String.valueOf(c).repeat(ANCHO);
+    private static String repetir(char c, int ancho) {
+        return String.valueOf(c).repeat(ancho);
     }
 }

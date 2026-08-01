@@ -964,21 +964,33 @@ public class FrmSalonero extends javax.swing.JFrame {
         Comanda comanda = misComandas.get(fila);
         List<DetalleComanda> detalles = detalleDAO.findByComanda(comanda.getId_comanda());
 
-        String texto = "Comanda #" + comanda.getId_comanda() + "  (" + comanda.getEstado() + ")\n\n";
+        String lineas = "";
         BigDecimal total = BigDecimal.ZERO;
         for (DetalleComanda d : detalles) {
             BigDecimal linea = d.getPrecio_unit().multiply(new BigDecimal(d.getCantidad()));
             total = total.add(linea);
-            texto += d.getCantidad() + " x " + detalleDAO.getNombreItem(d) + "   ₡" + linea + "\n";
+            lineas = lineas + Tiquete.item(d.getCantidad(), detalleDAO.getNombreItem(d), linea);
         }
-        texto += "\nSubtotal: ₡" + total;
+
+        // this is the pre-bill: the same receipt, but without tax and before closing the order
+        String tiquete = Tiquete.cabecera("DETALLE DE COMANDA", "No. " + comanda.getId_comanda())
+                + Tiquete.dato("Mesa", numeroDeMesa(comanda.getId_mesa()))
+                + Tiquete.dato("Estado", comanda.getEstado())
+                + Tiquete.dato("Hora", comanda.getHora_orden() != null
+                        ? comanda.getHora_orden().format(formatoHora) : "-")
+                + Tiquete.titulosItems()
+                + lineas
+                + Tiquete.separador()
+                + Tiquete.total("Subtotal", total);
 
         long minutos = minutosDeAtraso(comanda);
         if (minutos > LIMITE_MINUTOS) {
-            texto += "\n\nEsta comanda lleva " + minutos + " minutos abierta (el límite son " + LIMITE_MINUTOS + ").";
+            tiquete = tiquete + Tiquete.pie("Lleva " + minutos + " min abierta (tope " + LIMITE_MINUTOS + ")");
+        } else {
+            tiquete = tiquete + Tiquete.pie("Sin impuesto, todavía no es factura");
         }
 
-        JOptionPane.showMessageDialog(this, texto, "Detalle de la comanda", JOptionPane.INFORMATION_MESSAGE);
+        Tiquete.mostrar(this, "Detalle de la comanda", tiquete);
     }
 
     /** Closes the selected order and frees its table again. */

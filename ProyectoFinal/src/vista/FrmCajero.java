@@ -40,6 +40,9 @@ public class FrmCajero extends javax.swing.JFrame {
 
     private final DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    // shorter date, so the history columns fit on the paper
+    private final DateTimeFormatter formatoCorto = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
+
     private List<Comanda> porCobrar = new ArrayList<>();       // orders that still have something to charge
     private List<DetalleComanda> detallesEnPantalla = new ArrayList<>(); // unpaid items of the selected order
 
@@ -408,26 +411,36 @@ public class FrmCajero extends javax.swing.JFrame {
             return;
         }
 
-        String texto = "Facturas emitidas:\n\n";
+        String lineas = "";
         BigDecimal granTotal = BigDecimal.ZERO;
         int provisionales = 0;
         for (Factura f : facturas) {
-            String fecha = f.getFecha_emision() != null ? f.getFecha_emision().format(formatoHora) : "";
-            texto += "#" + f.getId_factura() + "  comanda " + f.getId_comanda() + "  " + fecha
-                    + "  ₡" + f.getTotal() + "  (" + f.getTipo() + " / " + f.getEstado() + ")\n";
+            String fecha = f.getFecha_emision() != null ? f.getFecha_emision().format(formatoCorto) : "";
             // only the final ones are added up; the provisional ones have not been paid yet
-            if ("final".equals(f.getTipo()) && f.getTotal() != null) {
+            boolean cobrada = "final".equals(f.getTipo()) && f.getTotal() != null;
+            if (cobrada) {
                 granTotal = granTotal.add(f.getTotal());
             } else {
                 provisionales++;
             }
-        }
-        texto += "\nTotal cobrado (facturas finales): ₡" + granTotal;
-        if (provisionales > 0) {
-            texto += "\nProvisionales pendientes de cobro: " + provisionales;
+            lineas = lineas + Tiquete.lineaHistorial(f.getId_factura(), f.getId_comanda(), fecha,
+                    f.getTotal(), cobrada ? "pagada" : "provisional");
         }
 
-        JOptionPane.showMessageDialog(this, texto, "Historial de facturas", JOptionPane.INFORMATION_MESSAGE);
+        String tiquete = Tiquete.cabeceraLista("HISTORIAL DE FACTURAS")
+                + Tiquete.titulosHistorial()
+                + lineas
+                + Tiquete.separadorLista()
+                + Tiquete.totalLista("Total cobrado", granTotal);
+        if (provisionales == 1) {
+            tiquete = tiquete + Tiquete.pieLista("1 provisional sin cobrar");
+        } else if (provisionales > 1) {
+            tiquete = tiquete + Tiquete.pieLista(provisionales + " provisionales sin cobrar");
+        } else {
+            tiquete = tiquete + Tiquete.pieLista("No quedan facturas pendientes");
+        }
+
+        Tiquete.mostrar(this, "Historial de facturas", tiquete);
     }
 
     // ------------------ helpers ------------------

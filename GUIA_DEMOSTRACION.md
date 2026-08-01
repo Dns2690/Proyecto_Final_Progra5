@@ -1,420 +1,219 @@
 # Guía de demostración — Software para Restaurante
 
-Guion paso a paso para presentar el sistema. Está armado para recorrer **todos los
-requerimientos del enunciado** en orden, sin devolverse.
+Guion para presentar el **flujo básico** del sistema en **5–7 minutos**: una comanda que nace en
+el salón, se reparte entre cocina y bar, vuelve al salonero y termina cobrada en caja.
 
-**Duración estimada:** 15–20 minutos.
+> Todo lo que **no** cabe en el tiempo está listado al final, en *"Si preguntan"*, con la ruta
+> exacta para llegar. No hay que memorizarlo: solo saber dónde está.
 
 ---
 
-## Antes de empezar (hacerlo con tiempo, no frente a la profe)
+## Antes de empezar (con tiempo, no frente a la profe)
 
-1. **Encender MySQL** y confirmar que la base `restaurante_db` existe.
+1. **Encender MySQL** y confirmar que existe `restaurante_db`.
 
-2. **Restaurar el respaldo** para arrancar con los datos de demostración:
+2. **Restaurar el respaldo**, para arrancar siempre con los mismos datos:
    ```
    mysql -u root -p < restaurante_db_dump.sql
    ```
    > Ojo: esto borra la base actual y la vuelve a crear.
 
-3. **Abrir el proyecto en NetBeans** (carpeta `ProyectoFinal`) y correrlo una vez para
-   confirmar que compila y que aparece la ventana de login.
+3. **Generar la rotación del día.** Entrar como `admin` / `admin123` (radio **Administrador**),
+   pestaña **Rotación** → la fecha de hoy ya viene puesta → **Guardar** → responder **Sí** a
+   *"Ese día no tiene rotación. ¿Generarla automáticamente?"*.
 
-4. **Cerrar la aplicación** y dejarla lista para arrancar de cero en la exposición.
+   **Anotar qué sección le tocó a SAL001 (Ana Solís).** Cerrar sesión.
 
-### Usuarios del sistema
+   > ⚠️ **Sin este paso el salonero abre su pantalla sin mesas** y la demo se cae. Hacerlo antes
+   > ahorra ~1 minuto en vivo.
 
-| Rol | Usuario | Contraseña | Radio a marcar |
+4. **Abrir el proyecto en NetBeans** (carpeta `ProyectoFinal`), correrlo una vez para confirmar
+   que compila y aparece el login, y **cerrarlo**.
+
+### Usuarios que se usan en el guion
+
+| Rol | Usuario | Contraseña | Radio |
 |---|---|---|---|
-| Administrador | `admin` | `admin123` | Administrador |
 | Salonero | `SAL001` (Ana Solís) | `pass123` | Empleado |
-| Salonero | `SAL002` (Luis Mora) | `pass123` | Empleado |
-| Salonero | `SAL003` (Carmen Vega) | `pass123` | Empleado |
-| Salonero | `SAL567` (Sofía Herrera) | `nueva456` | Empleado |
 | Cocinero | `COS001` (Pedro Rojas) | `pass123` | Empleado |
 | Bartender | `BAR001` (Diego Campos) | `pass123` | Empleado |
 | Cajero | `CAJ001` (María López) | `pass123` | Empleado |
-
-### Códigos del menú (para digitar durante la demo)
-
-**Comidas**
-
-| Código | Plato | Categoría | Precio |
-|---|---|---|---|
-| 1 | Ensalada César | Ensalada | ₡4 500 |
-| 2 | Casado de Pollo | Plato Fuerte | ₡7 500 |
-| 3 | Filete de Res | Plato Fuerte | ₡12 000 |
-| 4 | Hamburguesa BBQ | Comida Rápida | ₡8 500 |
-| 5 | Alitas Buffalo | Comida Rápida | ₡9 000 |
-| 6 | Flan Casero | Postre | ₡2 500 |
-| 7 | Ceviche de Corvina | Mariscos | ₡7 200 |
-
-**Bebidas**
-
-| Código | Bebida | Categoría | Precio | |
-|---|---|---|---|---|
-| 1 | Agua Natural 500ml | Bebida Fría | ₡1 000 | |
-| 2 | Refresco Natural | Bebida Fría | ₡1 500 | |
-| 3 | Café Americano | Bebida Caliente | ₡1 800 | |
-| 4 | Malteada Vainilla | Malteada | ₡3 500 | **inactiva** |
-| 5 | Cerveza Nacional | Licor | ₡2 500 | |
-| 6 | Chocolate Caliente | Bebida Caliente | ₡2 200 | |
-
-> La **Malteada Vainilla (código 4)** está inactiva a propósito. Sirve para demostrar que el
-> sistema no deja agregar a una comanda algo que no está disponible.
+| Administrador | `admin` | `admin123` | Administrador |
 
 ---
 
-## PASO 0 — Arrancar
+## El guion (5–7 min)
 
-Correr el proyecto. Abre la ventana **"Restaurante - Login"**.
+Cronómetro aproximado a la izquierda. **No devolverse.**
 
-> **Decir:** *"La aplicación arranca verificando la conexión con la base de datos; si no
-> conecta, avisa y no abre nada."*
+### `0:00` — PASO 1 · Salonero: tomar la orden
 
----
+**Entrar:** `SAL001` / `pass123`, radio **Empleado**.
 
-## PASO 1 — Seguridad del login
+Arriba se lee **"Salonero: Ana Solís"** y **"Sección asignada hoy: …"**
 
-**Digitar:** usuario `SAL001`, contraseña `loquesea` → **Ingresar**
+> **Decir:** *"Las contraseñas se guardan cifradas con MD5, nunca en texto plano. Según el rol, el
+> login abre una ventana distinta. Además el sistema ya le dice al salonero en qué sección le toca
+> hoy, porque los saloneros rotan de sección todos los días."*
 
-Aparece en rojo: *"Usuario o contraseña incorrectos"* y la ventana **no** se cierra.
+Pestaña **Mesas y Comandas**:
 
-> **Decir:** *"Las contraseñas se guardan cifradas con MD5. El sistema no compara textos, cifra
-> lo que se digitó y compara los hashes. En la base nunca está la contraseña real."*
+1. En el combo de arriba, escoger una mesa que diga **(libre)**.
+2. **Plato:** categoría `Plato Fuerte` → platillo `Filete de Res   ₡12000.00` → cantidad `2` →
+   **Agregar Plato**.
+3. **Bebida:** categoría `Licor` → `Cerveza Nacional   ₡2500.00` → cantidad `3` →
+   **Agregar Bebida**.
+4. → **Generar Comanda**
 
-*(Si quiere mostrarlo: en la tabla `usuario` la contraseña de `SAL001` se ve como
-`32250170a0dca92d53ec9624f336ca24`.)*
+Sale *"Comanda #NN generada para la mesa X"*. **Anotar ese número**, se usa en todos los pasos
+siguientes.
 
----
-
-## PASO 2 — Administrador: preparar el día
-
-**Entrar:** `admin` / `admin123`, marcando **Administrador**.
-
-> **Decir:** *"Según el rol, el login abre una ventana distinta. Un salonero nunca puede llegar
-> a esta pantalla."*
-
-### 2.1 Rotación del día ← **HACER ESTO PRIMERO, es indispensable**
-
-Pestaña **Rotación**:
-
-1. En **Fecha** debe estar la fecha de hoy (`aaaa-mm-dd`).
-2. Clic en **Guardar**.
-3. Pregunta: *"Ese día no tiene rotación. ¿Generarla automáticamente?"* → **Sí**.
-4. Avisa cuántos saloneros se asignaron y la tabla se llena.
-
-> **Decir:** *"Cada día los saloneros rotan de sección. El sistema arma la rotación
-> automáticamente: cada uno pasa a la sección siguiente a la que tuvo la última vez. La base
-> tiene restricciones que impiden que un salonero tenga dos secciones el mismo día o que una
-> sección la atiendan dos saloneros."*
-
-> ⚠️ **Sin este paso, el salonero abre su pantalla sin mesas.** No saltárselo.
-
-**Anotar qué sección le tocó a SAL001 (Ana Solís)** — se necesita en el paso 3.
-
-### 2.2 CRUD de comidas
-
-Pestaña **Comidas**:
-
-1. Clic en cualquier fila → el formulario se llena solo.
-2. Crear uno nuevo: nombre `Sopa Negra`, categoría `Plato Fuerte`, precio `3800`,
-   descripción `Con huevo duro` → **Guardar**.
-3. Mostrar un error a propósito: escribir precio `abc` → **Guardar** → avisa que debe ser
-   número mayor a cero.
-
-> **Decir:** *"Todos los mantenimientos funcionan igual: la tabla lista, el clic carga el
-> formulario, y Guardar / Actualizar / Eliminar / Limpiar operan sobre ese registro."*
-
-### 2.3 CRUD de bebidas y categorías
-
-Enseñar rápido las pestañas **Bebidas** y **Categorías** (comida y bebida en la misma pantalla).
-
-### 2.4 CRUD del salón
-
-Pestaña **Secciones** → hay 4 secciones.
-Pestaña **Mesas** → 20 mesas con su sección y disponibilidad.
-
-**Demostrar dos validaciones:**
-- Seleccionar una mesa que diga **"Ocupada"** → **Eliminar** → avisa que está ocupada.
-- En **Secciones**, escoger una que tenga mesas → **Eliminar** → avisa cuántas mesas tiene.
-
-> **Decir:** *"Antes de borrar se revisa que el dato no esté en uso. Preferimos explicar el
-> motivo en lugar de mostrar un error de llave foránea."*
-
-### 2.5 Registro de usuarios ← **el código de empleado**
-
-Pestaña **Usuarios**:
-
-1. Escoger **Tipo:** `Cocinero`.
-2. Escribir **Cédula:** `2-0456-0789`.
-3. **Mirar el campo Código**: se llena solo → **`COS789`**.
-4. Nombre: `Marta Ugalde`, Contraseña: `clave123`, Activo marcado → **Guardar**.
-
-> **Decir:** *"El código se arma con el prefijo del rol y los últimos tres dígitos de la cédula,
-> como pide el enunciado. Se genera solo mientras se escribe y no se puede editar, porque es la
-> llave primaria de la tabla."*
-
-5. Enseñar el botón **Contraseña**: selecciona un empleado y le cambia solo la clave.
-
-### 2.6 Tipos de usuario
-
-Pestaña **Tipos** → los 4 roles con su prefijo. Intentar guardar un prefijo de 2 letras → avisa
-que deben ser exactamente 3.
+> **Decir:** *"El menú se escoge por categoría y platillo, con el precio a la vista; el salonero no
+> tiene que saberse códigos. Solo aparece lo que está activo hoy. Al generar la comanda se guarda
+> la hora, porque hay un tope de 20 minutos para servirla, la mesa queda ocupada, y el pedido se
+> reparte solo: los platos a cocina y las bebidas al bar."*
 
 **Cerrar sesión.**
 
 ---
 
-## PASO 3 — Salonero: tomar la orden
+### `1:45` — PASO 2 · Cocina
 
-**Entrar:** `SAL001` / `pass123` (Empleado).
+**Entrar:** `COS001` / `pass123`.
 
-Arriba se lee: **"Salonero: Ana Solís"** y **"Sección asignada hoy: …"**
+1. Seleccionar la comanda anotada → **Detalle Comanda** → **aparece solo el Filete de Res**.
+2. Con la comanda seleccionada → **Proceso Cocina**.
 
-> **Decir:** *"Al ingresar, el sistema le indica en qué sección trabaja hoy. El combo de mesas
-> trae únicamente las mesas de esa sección, marcando cuáles están libres y cuáles ocupadas."*
+Sale: *"Platos listos. Falta que el bar termine las bebidas."*
 
-### 3.1 Reservas y vista preliminar de disponibilidad
+> **Decir:** *"La cocina ve únicamente los platos, las bebidas no son de su área. Y fíjense en la
+> coordinación: la comanda no pasa a 'lista' porque el bar todavía no entrega. El salonero no debe
+> ir a servir medio pedido."*
 
-Pestaña **Reservas**:
+**Cerrar sesión.**
 
-1. **Vista preliminar.** Poner **Personas: 5**, hora `20:00`, y presionar **Disponibilidad**.
-   Responde en verde con tres datos:
-   ```
-   Sí hay campo a las 20:00
-   5 personas ocupan 2 mesa(s)
-   Mesas libres: 1, 2, 3, 4, 6, 7, 8, 10 y 10 más
-   ```
+---
 
-   > **Decir:** *"El sistema muestra qué mesas están libres a esa hora y cuántas necesita el grupo.
-   > Se asume que en cada mesa caben 4 personas y que una reserva ocupa la mesa por 2 horas."*
+### `2:30` — PASO 3 · Bar
 
-2. **Cuando no hay campo** (opcional, si quiere mostrarlo): subir Personas a `20` en una hora ya
-   ocupada → responde en rojo diciendo cuántas mesas faltan **y a qué hora se desocupa una**.
+**Entrar:** `BAR001` / `pass123`.
 
-3. **Guardar una reserva:**
-   - Nombre: `Familia Rodríguez`
-   - Teléfono: `8888-9999`
-   - Fecha: dejar la de hoy
-   - Hora: `20:00`
-   - Personas: `5`
-   - Marcar **Incluye niños**
-   - → **Guardar Reserva**
+1. Seleccionar la misma comanda → **Detalle Bar** → **aparece solo la Cerveza Nacional**.
+2. → **Marcar Lista Bar**.
 
-   Confirma con *"Reserva guardada en la mesa N"* — **la reserva queda con mesa asignada**.
+Ahora sí: *"Comanda #NN lista para servir."*
 
-4. **Cancelar:** seleccionar una reserva de la tabla → **Cancelar Reserva** → confirmar → queda
-   en estado `cancelada`.
+> **Decir:** *"Como la cocina ya había terminado, al cerrar el bar la comanda pasa a 'lista'.
+> Recién ahí el salonero puede ir a servir."*
 
-### 3.2 Armar la comanda ← **el corazón de la demo**
+**Cerrar sesión.**
 
-Pestaña **Mesas y Comandas**:
+---
 
-1. Escoger una mesa que diga **(libre)**.
-2. **Código Plato:** escribir `3` y **presionar Enter** → aparece *"Filete de Res"*.
-3. Cantidad: `2` → **Agregar Plato**.
-4. **Código Bebida:** escribir `5` y Enter → *"Cerveza Nacional"*. Cantidad: `3` →
-   **Agregar Bebida**.
-5. *(Opcional)* Probar la bebida `4` → avisa que no está disponible.
-6. *(Opcional)* **Quitar Ítem** con una línea seleccionada.
-7. → **Generar Comanda**
+### `3:15` — PASO 4 · Salonero: servir y cerrar
 
-Sale: *"Comanda #NN generada para la mesa X"*. **Anotar ese número**, se usa en los pasos 4, 5 y 6.
+**Entrar otra vez:** `SAL001` / `pass123` → pestaña **Mis Comandas**.
 
-> **Decir:** *"Al generar la comanda se guarda la hora, porque hay un tope de 20 minutos para
-> servirla. El pedido se reparte automáticamente: los platos van a cocina y las bebidas al bar.
-> La mesa queda ocupada."*
-
-### 3.3 Mis comandas y el panel de notificación
-
-Pestaña **Mis Comandas** → aparece la comanda recién creada en estado `abierta`.
-
-En el panel de abajo está la **notificación de pedidos listos**, con los tres datos que pide el
-enunciado por cada comanda ya despachada:
+En el panel de abajo está la **notificación**:
 
 ```
 PEDIDO LISTO | Mesa 7 | comanda #10 | listo a las 20:08
-     Platillos: 2 Casado de Pollo · Bebidas: 2 Cerveza Nacional
+     Platillos: 2 Filete de Res · Bebidas: 3 Cerveza Nacional
 ```
 
-Y al final, en rojo, cuántas comandas pasaron los 20 minutos.
+> **Decir:** *"El salonero recibe el aviso con la mesa, la hora en que quedó listo y qué platillos y
+> bebidas puede ir a servir. En rojo aparecen las comandas que pasaron los 20 minutos."*
 
-> **Decir:** *"Cuando cocina y bar terminan, el salonero recibe la notificación con el número de
-> mesa, la hora en que quedó listo y qué platillos y bebidas puede ir a servir. El aviso rojo es el
-> control del tope de 20 minutos."*
+Seleccionar la comanda (ya en estado `lista`) → **Cerrar Comanda** → confirmar.
 
-### 3.4 Cerrar comanda → factura provisional
-
-Seleccionar una comanda que diga **`lista`** → **Cerrar Comanda** → confirmar.
-
-Sale la **factura provisional** con el detalle completo:
+Sale la **factura provisional**:
 
 ```
 FACTURA PROVISIONAL #10
 Comanda #10   Mesa 7
 Salonero: Ana Solís
 
-2 x Casado de Pollo   ₡15000.00
-2 x Cerveza Nacional  ₡5000.00
+2 x Filete de Res    ₡24000.00
+3 x Cerveza Nacional ₡7500.00
 
-Total antes de impuesto: ₡20000.00
-IVA (13%): ₡2600.00
-Total a pagar: ₡22600.00
+Total antes de impuesto: ₡31500.00
+IVA (13%): ₡4095.00
+Total a pagar: ₡35595.00
 
 Pasa a caja para ser cancelada.
 ```
 
-La mesa queda libre. **Anotar el número de esa factura**, se usa en el paso 6.
+La mesa **queda libre** otra vez.
 
-> **Decir:** *"Al cerrar la comanda el salonero genera la factura provisional, que es la que ve el
-> cliente. Esa misma factura pasa a caja para ser cancelada; no se crea otra."*
-
-**Cerrar sesión.**
-
----
-
-## PASO 4 — Cocina
-
-**Entrar:** `COS001` / `pass123`.
-
-1. Buscar la comanda anotada en la lista.
-2. Seleccionarla → **Detalle Comanda** → **aparece solo el Filete de Res, no la cerveza**.
-
-> **Decir:** *"La cocina ve únicamente los platos. Las bebidas no le aparecen porque no son de
-> su área."*
-
-3. Con la comanda seleccionada → **Proceso Cocina**.
-
-Sale: *"Platos listos. Falta que el bar termine las bebidas."*
-
-> **Decir:** *"Aquí está la coordinación entre áreas: la comanda no pasa a 'lista' porque el bar
-> todavía no ha entregado. Queda 'en proceso'. El salonero no debe ir a servir medio pedido."*
+> **Decir:** *"Al cerrar la comanda sale la factura provisional, que es la que ve el cliente, ya con
+> el IVA del 13 %. Esa misma factura es la que pasa a caja."*
 
 **Cerrar sesión.**
 
 ---
 
-## PASO 5 — Bar
-
-**Entrar:** `BAR001` / `pass123`.
-
-1. Buscar la misma comanda → **Detalle Bar** → **aparece solo la Cerveza Nacional**.
-2. Seleccionarla → **Marcar Lista Bar**.
-
-Ahora sí sale: *"Comanda #NN lista para servir."*
-
-> **Decir:** *"Como la cocina ya había terminado, al cerrar el bar la comanda pasa a 'lista'.
-> Recién ahí el salonero puede servir."*
-
-### 5.1 Comanda propia del bar (con comida incluida)
-
-Botón **Crear Comanda**. Va preguntando ítem por ítem:
-
-1. *"¿Qué va a agregar?"* → **Bebida** → código `3` (Café Americano) → cantidad `2`
-2. *"¿Agregar algo más?"* → **Sí**
-3. *"¿Qué va a agregar?"* → **Comida** → código `2` (Casado de Pollo) → cantidad `1`
-4. *"¿Agregar algo más?"* → **No**
-
-Confirma: *"Comanda #NN creada con 2 ítem(s). **La comida se mandó a la cocina.**"*
-
-> **Decir:** *"El bar atiende clientes que consumen solo en la barra, y esa comanda no ocupa mesa.
-> Si el cliente del bar pide algo de comer, esa parte se remite a la cocina igual que una comanda
-> de salón: el bar se queda con las bebidas y la cocina recibe los platos."*
-
-*(Se puede comprobar entrando como `COS001`: la comanda del bar aparece en la cola de cocina.)*
-
-**Cerrar sesión.**
-
----
-
-## PASO 6 — Caja: cobrar con IVA
+### `4:30` — PASO 5 · Caja: cobrar
 
 **Entrar:** `CAJ001` / `pass123`.
 
-### 6.1 Cuenta junta
-
-1. Buscar la comanda del paso 3 en la lista.
-2. Seleccionarla → **Detalle Caja**.
-3. Se cargan las líneas y abajo aparecen:
+1. Seleccionar la comanda → **Detalle Caja**. Se cargan las líneas y abajo:
    ```
    SubTotal: ₡31 500  |  IVA (13%): ₡4 095  |  Total: ₡35 595
    ```
+2. → **Generar Factura** → confirmar.
 
-> **Decir:** *"El impuesto de ventas de Costa Rica es del 13 % y se aplica sobre el subtotal.
-> El precio del menú está sin impuesto."*
+La comanda **desaparece de la lista** (ya está cobrada).
 
-4. **Generar Factura** → confirmar → sale el número de factura con el desglose.
+3. → **Historial Facturas**: la factura aparece como **`final / pagada`**, con **el mismo número**
+   de la provisional.
 
-Al volver, la comanda **desapareció de la lista** (ya está cobrada), quedó `cerrada` y **la mesa
-se liberó**.
-
-> **Si cobró la comanda que cerró en el paso 3.4:** el número de factura es **el mismo** de la
-> provisional. Se puede mostrar en **Historial Facturas**, donde ahora aparece como
-> `final / pagada` en vez de `provisional / pendiente`.
->
-> **Decir:** *"La factura provisional que sacó el salonero es la que se cancela aquí. No se
-> duplica: la misma factura cambia de provisional a final y queda pagada, con el código del
-> cajero que la cobró."*
-
-### 6.2 Cuenta separada ← **demostrar aparte**
-
-1. Seleccionar otra comanda de la lista (queda alguna de la base de demostración).
-2. **Detalle Caja** → se cargan sus líneas.
-3. Marcar la casilla **"Cuenta Separada?"**.
-4. Seleccionar **una o dos líneas** de la tabla de detalle (con clic, o Ctrl+clic para varias).
-5. → **Dividir Cuenta** → confirmar.
-6. Volver a seleccionar la misma comanda → **Detalle Caja** → **ahora solo aparece lo que
-   falta**.
-7. Seleccionar lo restante → **Dividir Cuenta** otra vez → ahí sí la comanda se cierra.
-
-> **Decir:** *"La tabla `detalle_factura` permite repartir las líneas de una misma comanda entre
-> varias facturas. El sistema lleva el control de lo ya cobrado, y la comanda solo se cierra
-> cuando no queda nada pendiente."*
-
-### 6.3 Historial
-
-**Historial Facturas** → lista todas con el total facturado.
+> **Decir:** *"El impuesto de ventas es del 13 % sobre el subtotal; el precio del menú va sin
+> impuesto. Y no se duplica la factura: la provisional que sacó el salonero es la que se cancela
+> aquí, cambia de provisional a final y queda pagada con el código del cajero que la cobró."*
 
 **Cerrar sesión.**
 
 ---
 
-## PASO 7 — Reportes
+### `5:45` — Cierre
 
-**Entrar:** `admin` / `admin123` → pestaña **Reportes**.
+**Entrar:** `admin` / `admin123` → pestaña **Reportes** →
+**"Comandas atendidas en Cocina (Salón vs Bar)"** → **Generar**.
 
-Generar los cinco, uno por uno:
-
-| # | Reporte | Qué señalar |
-|---|---|---|
-| 1 | Personas atendidas por día - Salón | Cruza comandas de salón con las reservas por mesa y fecha |
-| 2 | Personas atendidas por día - Bar | Solo tiene datos cuando el bar atiende una mesa con reserva |
-| 3 | Comandas realizadas en el Bar | Todas las de origen bar, por día |
-| 4 | Comandas atendidas en el Bar | Las que el bar despachó |
-| 5 | Comandas atendidas en Cocina (Salón vs Bar) | **Muestra la comanda que acabamos de crear** |
-
-> **Decir:** *"Los reportes se generan con JFreeChart como gráficos de barras dentro de la misma
-> ventana. Las consultas están agrupadas en una clase aparte de la capa de datos."*
-
-**El reporte 5 es el mejor cierre**, porque incluye la comanda creada en vivo durante la demo.
+> **Decir:** *"Los reportes se hacen con JFreeChart dentro de la misma ventana. En este aparece la
+> comanda que acabamos de crear en vivo."*
 
 ---
 
 ## Resumen del recorrido
 
 ```
-admin    → rotación del día, CRUD menú, CRUD salón, registro de empleado
-SAL001   → disponibilidad de mesas + reserva con mesa asignada
-SAL001   → comanda (plato + bebida)     → sale a cocina y bar
-COS001   → despacha los platos          → queda 'en proceso'
-BAR001   → despacha las bebidas         → queda 'lista'
-SAL001   → ve la notificación (mesa, hora, platillos) y cierra la comanda
-           → factura PROVISIONAL
-BAR001   → crea su propia comanda de barra, con bebida y comida (la comida va a cocina)
-CAJ001   → cancela la provisional (pasa a final) + cuenta separada + historial
-admin    → los 5 reportes, con la comanda de la demo incluida
+SAL001  → comanda (2 Filete de Res + 3 Cerveza)  → sale a cocina y bar
+COS001  → despacha los platos                    → queda 'en proceso'
+BAR001  → despacha las bebidas                   → queda 'lista'
+SAL001  → ve la notificación y cierra            → factura PROVISIONAL (IVA 13%)
+CAJ001  → cobra: la misma factura pasa a final/pagada
+admin   → reporte con la comanda de la demo
 ```
+
+---
+
+## Si preguntan (fuera del guion)
+
+Nada de esto está en los 6 minutos, pero está hecho y se llega en un clic:
+
+| Si preguntan por… | Dónde está |
+|---|---|
+| Login que rechaza contraseñas malas | Login: `SAL001` con cualquier clave → *"Usuario o contraseña incorrectos"*, la ventana no se cierra |
+| Reservas y disponibilidad | Salonero → pestaña **Reservas**: **Disponibilidad** dice cuántas mesas necesita el grupo, cuáles están libres y, si no hay, **a qué hora se desocupa una**. Guardar deja la reserva **con mesa asignada** |
+| Código de empleado (`SAL001`) | Admin → **Usuarios**: escoger Tipo `Cocinero` y cédula `2-0456-0789` → el código se arma solo: **`COS789`** (prefijo del rol + últimos 3 dígitos) |
+| Rotación diaria de secciones | Admin → **Rotación**: cada salonero pasa a la sección siguiente; la base impide dos secciones el mismo día |
+| CRUD / mantenimientos | Admin → **Comidas**, **Bebidas**, **Categorías**, **Secciones**, **Mesas**, **Usuarios**, **Tipos** |
+| Validaciones antes de borrar | Admin → **Mesas**: borrar una **Ocupada** avisa; **Secciones**: borrar una con mesas dice cuántas tiene |
+| Producto inactivo | La **Malteada Vainilla** está inactiva a propósito: **no aparece** en la lista del salonero |
+| Cuenta separada | Caja → **Detalle Caja** → marcar **"Cuenta Separada?"** → seleccionar líneas → **Dividir Cuenta**. La comanda solo se cierra cuando no queda nada pendiente |
+| Comanda propia del bar | Bar → **Crear Comanda**: pregunta ítem por ítem; no ocupa mesa, y si el cliente pide comida **esa parte se manda a la cocina** |
+| Los otros 4 reportes | Admin → **Reportes**: personas por día (salón y bar), comandas realizadas y atendidas en el bar |
 
 ---
 
@@ -422,9 +221,9 @@ admin    → los 5 reportes, con la comanda de la demo incluida
 
 | Problema | Solución |
 |---|---|
-| El salonero no tiene mesas | Falta el **paso 2.1**: generar la rotación del día como admin. |
-| "No se pudo conectar a la base de datos" | MySQL apagado, o la contraseña de `ConnectionDB.java` no coincide. |
-| La comanda no aparece en cocina | Solo llega a cocina si tiene **platos**. Si solo tenía bebidas, buscarla en el bar. |
-| La comanda no aparece en caja | La caja solo muestra comandas `lista` o `cerrada`. Falta que cocina y bar la despachen. |
-| Todas las comandas salen "atrasadas" | Normal: son de la base de prueba y tienen horas viejas. Sirve para mostrar la regla de los 20 minutos. |
-| No compila en otra máquina | Las librerías están en `ProyectoFinal/lib/` y vienen con el repositorio. Revisar que la plataforma Java del proyecto sea **JDK 25**. |
+| El salonero no tiene mesas | Falta generar la **rotación del día** como admin (paso 3 de la preparación) |
+| "No se pudo conectar a la base de datos" | MySQL apagado, o la contraseña de `ConnectionDB.java` no coincide |
+| La comanda no aparece en cocina | Solo llega a cocina si tiene **platos**. Si solo tenía bebidas, buscarla en el bar |
+| La comanda no aparece en caja | La caja solo muestra comandas `lista` o `cerrada`. Falta que cocina y bar la despachen |
+| Todas las comandas salen "atrasadas" | Normal: las de la base de prueba tienen horas viejas. Sirve para mostrar la regla de los 20 minutos |
+| No compila en otra máquina | Las librerías están en `ProyectoFinal/lib/` y vienen con el repositorio. La plataforma Java del proyecto debe ser **JDK 25** |

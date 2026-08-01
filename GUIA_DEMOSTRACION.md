@@ -83,8 +83,8 @@ Aparece en rojo: *"Usuario o contraseña incorrectos"* y la ventana **no** se ci
 > **Decir:** *"Las contraseñas se guardan cifradas con MD5. El sistema no compara textos, cifra
 > lo que se digitó y compara los hashes. En la base nunca está la contraseña real."*
 
-*(Si quiere mostrarlo: en la tabla `usuario` la contraseña se ve como
-`bb1dfaf399e9ac67760b674f47ef549d`.)*
+*(Si quiere mostrarlo: en la tabla `usuario` la contraseña de `SAL001` se ve como
+`32250170a0dca92d53ec9624f336ca24`.)*
 
 ---
 

@@ -82,7 +82,7 @@ la misma contraseña no producen el mismo hash. Decirlo así suma, porque demues
 la diferencia.
 
 **Prueba en vivo:** en la tabla `usuario`, la contraseña de `SAL001` se ve como
-`bb1dfaf399e9ac67760b674f47ef549d`, no como `pass123`.
+`32250170a0dca92d53ec9624f336ca24`, no como `pass123`.
 
 ---
 

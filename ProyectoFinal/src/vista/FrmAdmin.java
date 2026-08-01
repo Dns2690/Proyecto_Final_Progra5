@@ -230,9 +230,7 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnCerrarSesion.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCerrarSesion.setText("Cerrar Sesion");
-        btnCerrarSesion.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnCerrarSesionActionPerformed(evt);
-        });
+        btnCerrarSesion.addActionListener(this::btnCerrarSesionActionPerformed);
 
         tabAdmin.setPreferredSize(new java.awt.Dimension(705, 100));
 
@@ -249,7 +247,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblTiposMouseClicked(evt);
             }
         });
-
         scrTipos.setViewportView(tblTipos);
         if (tblTipos.getColumnModel().getColumnCount() > 0) {
             tblTipos.getColumnModel().getColumn(2).setResizable(false);
@@ -263,27 +260,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnLimpiarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarTipo.setText("Limpiar");
-        btnLimpiarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarTipoActionPerformed(evt);
-        });
+        btnLimpiarTipo.addActionListener(this::btnLimpiarTipoActionPerformed);
 
         btnEliminarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarTipo.setText("Eliminar");
-        btnEliminarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarTipoActionPerformed(evt);
-        });
+        btnEliminarTipo.addActionListener(this::btnEliminarTipoActionPerformed);
 
         btnActualizarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarTipo.setText("Actualizar");
-        btnActualizarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarTipoActionPerformed(evt);
-        });
+        btnActualizarTipo.addActionListener(this::btnActualizarTipoActionPerformed);
 
         btnGuardarTipo.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarTipo.setText("Guardar");
-        btnGuardarTipo.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarTipoActionPerformed(evt);
-        });
+        btnGuardarTipo.addActionListener(this::btnGuardarTipoActionPerformed);
 
         javax.swing.GroupLayout pnlTiposLayout = new javax.swing.GroupLayout(pnlTipos);
         pnlTipos.setLayout(pnlTiposLayout);
@@ -349,20 +338,19 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblUsuariosMouseClicked(evt);
             }
         });
-
         scrUsuarios.setViewportView(tblUsuarios);
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel3.setText("Cédula:");
-
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel4.setText("Código:");
 
         txtCedulaUsu.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 txtCedulaUsuKeyReleased(evt);
             }
         });
+
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel4.setText("Código:");
 
         txtCodigoUsu.setEditable(false);
 
@@ -372,14 +360,8 @@ public class FrmAdmin extends javax.swing.JFrame {
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel6.setText("Contraseña:");
 
-
         cmbTipoUsu.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        cmbTipoUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-
-            cmbTipoUsuActionPerformed(evt);
-
-        });
+        cmbTipoUsu.addActionListener(this::cmbTipoUsuActionPerformed);
 
         jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel7.setText("Tipo:");
@@ -390,33 +372,23 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGuardarUsu.setText("Guardar");
-        btnGuardarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarUsuActionPerformed(evt);
-        });
+        btnGuardarUsu.addActionListener(this::btnGuardarUsuActionPerformed);
 
         btnActualizarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnActualizarUsu.setText("Actualizar");
-        btnActualizarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarUsuActionPerformed(evt);
-        });
+        btnActualizarUsu.addActionListener(this::btnActualizarUsuActionPerformed);
 
         btnContrasenaUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnContrasenaUsu.setText("Contraseña");
-        btnContrasenaUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnContrasenaUsuActionPerformed(evt);
-        });
+        btnContrasenaUsu.addActionListener(this::btnContrasenaUsuActionPerformed);
 
         btnEliminarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnEliminarUsu.setText("Eliminar");
-        btnEliminarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarUsuActionPerformed(evt);
-        });
+        btnEliminarUsu.addActionListener(this::btnEliminarUsuActionPerformed);
 
         btnLimpiarUsu.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnLimpiarUsu.setText("Limpiar");
-        btnLimpiarUsu.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarUsuActionPerformed(evt);
-        });
+        btnLimpiarUsu.addActionListener(this::btnLimpiarUsuActionPerformed);
 
         javax.swing.GroupLayout pnlUsuariosLayout = new javax.swing.GroupLayout(pnlUsuarios);
         pnlUsuarios.setLayout(pnlUsuariosLayout);
@@ -526,7 +498,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblSeccionesMouseClicked(evt);
             }
         });
-
         scrSecciones.setViewportView(tblSecciones);
 
         jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -534,27 +505,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarSec.setText("Guardar");
-        btnGuardarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarSecActionPerformed(evt);
-        });
+        btnGuardarSec.addActionListener(this::btnGuardarSecActionPerformed);
 
         btnActualizarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarSec.setText("Actualizar");
-        btnActualizarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarSecActionPerformed(evt);
-        });
+        btnActualizarSec.addActionListener(this::btnActualizarSecActionPerformed);
 
         btnEliminarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarSec.setText("Eliminar");
-        btnEliminarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarSecActionPerformed(evt);
-        });
+        btnEliminarSec.addActionListener(this::btnEliminarSecActionPerformed);
 
         btnLimpiarSec.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarSec.setText("Limpiar");
-        btnLimpiarSec.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarSecActionPerformed(evt);
-        });
+        btnLimpiarSec.addActionListener(this::btnLimpiarSecActionPerformed);
 
         javax.swing.GroupLayout pnlSeccionesLayout = new javax.swing.GroupLayout(pnlSecciones);
         pnlSecciones.setLayout(pnlSeccionesLayout);
@@ -615,7 +578,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblMesasMouseClicked(evt);
             }
         });
-
         scrMesas.setViewportView(tblMesas);
 
         spnNumeroMesa.setModel(new javax.swing.SpinnerNumberModel(1, 1, 99, 1));
@@ -628,27 +590,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarMesa.setText("Guardar");
-        btnGuardarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarMesaActionPerformed(evt);
-        });
+        btnGuardarMesa.addActionListener(this::btnGuardarMesaActionPerformed);
 
         btnActualizarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarMesa.setText("Actualizar");
-        btnActualizarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarMesaActionPerformed(evt);
-        });
+        btnActualizarMesa.addActionListener(this::btnActualizarMesaActionPerformed);
 
         btnEliminarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarMesa.setText("Eliminar");
-        btnEliminarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarMesaActionPerformed(evt);
-        });
+        btnEliminarMesa.addActionListener(this::btnEliminarMesaActionPerformed);
 
         btnLimpiarMesa.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarMesa.setText("Limpiar");
-        btnLimpiarMesa.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarMesaActionPerformed(evt);
-        });
+        btnLimpiarMesa.addActionListener(this::btnLimpiarMesaActionPerformed);
 
         javax.swing.GroupLayout pnlMesasLayout = new javax.swing.GroupLayout(pnlMesas);
         pnlMesas.setLayout(pnlMesasLayout);
@@ -715,7 +669,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblComidasMouseClicked(evt);
             }
         });
-
         scrComidas.setViewportView(tblComidas);
 
         jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -737,27 +690,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarComida.setText("Guardar");
-        btnGuardarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarComidaActionPerformed(evt);
-        });
+        btnGuardarComida.addActionListener(this::btnGuardarComidaActionPerformed);
 
         btnActualizarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarComida.setText("Actualizar");
-        btnActualizarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarComidaActionPerformed(evt);
-        });
+        btnActualizarComida.addActionListener(this::btnActualizarComidaActionPerformed);
 
         btnEliminarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarComida.setText("Eliminar");
-        btnEliminarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarComidaActionPerformed(evt);
-        });
+        btnEliminarComida.addActionListener(this::btnEliminarComidaActionPerformed);
 
         btnLimpiarComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarComida.setText("Limpiar");
-        btnLimpiarComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarComidaActionPerformed(evt);
-        });
+        btnLimpiarComida.addActionListener(this::btnLimpiarComidaActionPerformed);
 
         javax.swing.GroupLayout pnlComidasLayout = new javax.swing.GroupLayout(pnlComidas);
         pnlComidas.setLayout(pnlComidasLayout);
@@ -847,7 +792,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblBebidasMouseClicked(evt);
             }
         });
-
         scrBebidas.setViewportView(tblBebidas);
 
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -869,27 +813,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnGuardarBebida.setText("Guardar");
-        btnGuardarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarBebidaActionPerformed(evt);
-        });
+        btnGuardarBebida.addActionListener(this::btnGuardarBebidaActionPerformed);
 
         btnActualizarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnActualizarBebida.setText("Actualizar");
-        btnActualizarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarBebidaActionPerformed(evt);
-        });
+        btnActualizarBebida.addActionListener(this::btnActualizarBebidaActionPerformed);
 
         btnEliminarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnEliminarBebida.setText("Eliminar");
-        btnEliminarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarBebidaActionPerformed(evt);
-        });
+        btnEliminarBebida.addActionListener(this::btnEliminarBebidaActionPerformed);
 
         btnLimpiarBebida.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnLimpiarBebida.setText("Limpiar");
-        btnLimpiarBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarBebidaActionPerformed(evt);
-        });
+        btnLimpiarBebida.addActionListener(this::btnLimpiarBebidaActionPerformed);
 
         javax.swing.GroupLayout pnlBebidasLayout = new javax.swing.GroupLayout(pnlBebidas);
         pnlBebidas.setLayout(pnlBebidasLayout);
@@ -975,7 +911,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblCatComidaMouseClicked(evt);
             }
         });
-
         scrCatComida.setViewportView(tblCatComida);
 
         jLabel17.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -983,27 +918,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarCatComida.setText("Guardar");
-        btnGuardarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarCatComidaActionPerformed(evt);
-        });
+        btnGuardarCatComida.addActionListener(this::btnGuardarCatComidaActionPerformed);
 
         btnActualizarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarCatComida.setText("Actualizar");
-        btnActualizarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarCatComidaActionPerformed(evt);
-        });
+        btnActualizarCatComida.addActionListener(this::btnActualizarCatComidaActionPerformed);
 
         btnEliminarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarCatComida.setText("Eliminar");
-        btnEliminarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarCatComidaActionPerformed(evt);
-        });
+        btnEliminarCatComida.addActionListener(this::btnEliminarCatComidaActionPerformed);
 
         btnLimpiarCatComida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarCatComida.setText("Limpiar");
-        btnLimpiarCatComida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarCatComidaActionPerformed(evt);
-        });
+        btnLimpiarCatComida.addActionListener(this::btnLimpiarCatComidaActionPerformed);
 
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
@@ -1020,7 +947,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblCatBebidaMouseClicked(evt);
             }
         });
-
         scrCatBebida.setViewportView(tblCatBebida);
 
         jLabel18.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -1028,27 +954,19 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarCatBebida.setText("Guardar");
-        btnGuardarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarCatBebidaActionPerformed(evt);
-        });
+        btnGuardarCatBebida.addActionListener(this::btnGuardarCatBebidaActionPerformed);
 
         btnActualizarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnActualizarCatBebida.setText("Actualizar");
-        btnActualizarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnActualizarCatBebidaActionPerformed(evt);
-        });
+        btnActualizarCatBebida.addActionListener(this::btnActualizarCatBebidaActionPerformed);
 
         btnEliminarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarCatBebida.setText("Eliminar");
-        btnEliminarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarCatBebidaActionPerformed(evt);
-        });
+        btnEliminarCatBebida.addActionListener(this::btnEliminarCatBebidaActionPerformed);
 
         btnLimpiarCatBebida.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarCatBebida.setText("Limpiar");
-        btnLimpiarCatBebida.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarCatBebidaActionPerformed(evt);
-        });
+        btnLimpiarCatBebida.addActionListener(this::btnLimpiarCatBebidaActionPerformed);
 
         javax.swing.GroupLayout pnlCategoriasLayout = new javax.swing.GroupLayout(pnlCategorias);
         pnlCategorias.setLayout(pnlCategoriasLayout);
@@ -1135,7 +1053,6 @@ public class FrmAdmin extends javax.swing.JFrame {
                 tblRotacionMouseClicked(evt);
             }
         });
-
         scrRotacion.setViewportView(tblRotacion);
 
         cmbSaloneroRot.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ana Solís (SAL001)", "Luis Mora (SAL002)", "Carmen Vega (SAL003)" }));
@@ -1153,21 +1070,15 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGuardarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGuardarRot.setText("Guardar");
-        btnGuardarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGuardarRotActionPerformed(evt);
-        });
+        btnGuardarRot.addActionListener(this::btnGuardarRotActionPerformed);
 
         btnEliminarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnEliminarRot.setText("Eliminar");
-        btnEliminarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnEliminarRotActionPerformed(evt);
-        });
+        btnEliminarRot.addActionListener(this::btnEliminarRotActionPerformed);
 
         btnLimpiarRot.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnLimpiarRot.setText("Limpiar");
-        btnLimpiarRot.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnLimpiarRotActionPerformed(evt);
-        });
+        btnLimpiarRot.addActionListener(this::btnLimpiarRotActionPerformed);
 
         javax.swing.GroupLayout pnlRotacionLayout = new javax.swing.GroupLayout(pnlRotacion);
         pnlRotacion.setLayout(pnlRotacionLayout);
@@ -1237,9 +1148,7 @@ public class FrmAdmin extends javax.swing.JFrame {
 
         btnGenerarReporte.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnGenerarReporte.setText("Generar Reporte ");
-        btnGenerarReporte.addActionListener((java.awt.event.ActionEvent evt) -> {
-            btnGenerarReporteActionPerformed(evt);
-        });
+        btnGenerarReporte.addActionListener(this::btnGenerarReporteActionPerformed);
 
         javax.swing.GroupLayout pnlGraficoLayout = new javax.swing.GroupLayout(pnlGrafico);
         pnlGrafico.setLayout(pnlGraficoLayout);
@@ -1286,7 +1195,7 @@ public class FrmAdmin extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(20, 20, 20)
-                .addComponent(IblBienvenida, javax.swing.GroupLayout.PREFERRED_SIZE, 273, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(IblBienvenida, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnCerrarSesion)
                 .addGap(39, 39, 39))

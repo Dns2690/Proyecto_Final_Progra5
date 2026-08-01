@@ -25,7 +25,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
-              <Component id="IblBienvenida" min="-2" pref="273" max="-2" attributes="0"/>
+              <Component id="IblBienvenida" min="-2" pref="293" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
               <Component id="btnCerrarSesion" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="39" max="-2" attributes="0"/>
@@ -486,8 +486,6 @@
               </Properties>
             </Component>
             <Component class="javax.swing.JPasswordField" name="pwdContrasenaUsu">
-              <Properties>
-                      </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="cmbTipoUsu">
               <Properties>
@@ -500,12 +498,12 @@
                   </StringArray>
                 </Property>
               </Properties>
-              <AuxValues>
-                <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
-              </AuxValues>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmbTipoUsuActionPerformed"/>
               </Events>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+              </AuxValues>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel7">
               <Properties>
